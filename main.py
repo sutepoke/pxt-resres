@@ -107,8 +107,9 @@ while True:
     # タッチロゴに触れているか確認
     if input.logo_is_pressed():
         # ======= マウスモード =======
-        basic.show_icon(IconNames.SMALL_DIAMOND) # マウスモード中のインジケータ
-        
+        #basic.show_icon(IconNames.SMALL_DIAMOND) # マウスモード中のインジケータ
+        led.plot(0, 0)
+        led.unplot(0, 4)
         # 移動量の計算
         mx, my = calculate_movement()
         
@@ -123,7 +124,9 @@ while True:
         
     else:
         # ======= キーボードモード =======
-        basic.show_icon(IconNames.STICK_FIGURE) # キーボードモード中のインジケータ
+        #basic.show_icon(IconNames.STICK_FIGURE) # キーボードモード中のインジケータ
+        led.plot(0, 4)
+        led.unplot(0, 0)
         # 今回は何もしないため空けておきます
         pass
         
