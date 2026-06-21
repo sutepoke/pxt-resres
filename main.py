@@ -1,133 +1,137 @@
 # 拡張機能 `bluetooth bsieve/rmicrobit-pxt-blehid` がプロジェクトに追加されている前提です
 # ※MakeCodeの「拡張機能」から上記URL/識別子を追加してください。
 
-# --- グローバル変数・状態管理 ---
-# 加速度の履歴（ノイズ除去・静止判定用：最新, 前, 前々, 前々々）
-hist_x = [0, 0, 0, 0]
-hist_y = [0, 0, 0, 0]
+# --- 定数とグローバル変数 ---
+MODE_MOUSE = 0
+MODE_KEYBOARD = 1
+current_mode = MODE_MOUSE
 
-# ボタンとタッチの最新状態
-btn_a_pressed = False
-btn_b_pressed = False
-p0_touched = False
-p1_touched = False
-p2_touched = False
+# ボタンとタッチの現在の状態 (True: 押されている / False: 離されている)
+btn_a_now = False
+btn_b_now = False
+p0_now = False
 
-# スクロール判定用のタイムスタンプと状態
-last_touch_time = 0
-scroll_step = 0 # 0:なし, 1:P0検出, 2:P1検出(下), -1:P2検出, -2:P1検出(上)
-scroll_val = 0  # メインループに渡すスクロール量
+# 前回のボタン状態（変化を検知するため）
+btn_a_prev = False
+btn_b_prev = False
 
-# --- バックグラウンド状態監視タスク (20ms周期) ---
-def stuck_monitor():
-    global btn_a_pressed, btn_b_pressed, p0_touched, p1_touched, p2_touched
-    global hist_x, hist_y, scroll_step, scroll_val, last_touch_time
+# 加速度データの履歴（移動平均・ノイズ除去用）
+# [最新, 前回, 前々回]
+acc_x_history = [0, 0, 0]
+acc_y_history = [0, 0, 0]
+
+# --- モード切り替え関数 ---
+def update_mode_led():
+    if current_mode == MODE_MOUSE:
+        led.plot(0, 0)
+        led.unplot(0, 4)
+    else:
+        led.plot(0, 4)
+        led.unplot(0, 0)
+
+# ロゴタッチでモード切替（押して離した時などに反応）
+def on_logo_event():
+    global current_mode
+    if current_mode == MODE_MOUSE:
+        current_mode = MODE_KEYBOARD
+    else:
+        current_mode = MODE_MOUSE
+    update_mode_led()
+
+input.on_logo_event(TouchButtonEvent.TOUCHED, on_logo_event)
+
+
+# --- 状態監視プロセス（バックグラウンド） ---
+# 20msごとに各種センサーの値をサンプリングし、履歴を更新します
+def background_monitor():
+    global btn_a_now, btn_b_now, p0_now
+    global acc_x_history, acc_y_history
     
     while True:
-        # 1. ボタン状態の取得
-        btn_a_pressed = input.button_is_pressed(Button.A)
-        btn_b_pressed = input.button_is_pressed(Button.B)
+        # ボタンとエッジコネクタ(P0)の「タッチされているか」の状態を取得
+        btn_a_now = input.button_is_pressed(Button.A)
+        btn_b_now = input.button_is_pressed(Button.B)
+        p0_now = input.pin_is_pressed(TouchPin.P0)
         
-        # 2. エッジコネクタのタッチ状態取得
-        p0 = input.pin_is_pressed(TouchPin.P0)
-        p1 = input.pin_is_pressed(TouchPin.P1)
-        p2 = input.pin_is_pressed(TouchPin.P2)
-        
-        # 3. 加速度センサー値の取得と履歴シフト（平行移動用）
-        # ※ロゴ右側・Aボタン正面の場合、ピッチ/ロールの傾きではなく、
-        # 純粋なX/Yの瞬間的な加速度の変化（高通フィルター的な処理）で平行移動を捉えます。
+        # 加速度センサーの値を取得 (-2046 〜 2046)
+        # ※表面を正面（ロゴが右、Aボタンが手前）にした場合、
+        # 必要に応じてxとyの軸や符号を調整してください。
         raw_x = input.acceleration(Dimension.X)
         raw_y = input.acceleration(Dimension.Y)
         
-        hist_x.insert(0, raw_x)
-        hist_x.pop()
-        hist_y.insert(0, raw_y)
-        hist_y.pop()
+        # 履歴の更新（最新を先頭に挿入し、古いものを削除）
+        acc_x_history.insert(0, raw_x)
+        acc_x_history.pop()
+        acc_y_history.insert(0, raw_y)
+        acc_y_history.pop()
         
-        # 4. エッジセンサーによるスライドスクロール判定
-        # タイムアウト処理（1秒以上経過したらリセット）
-        now = control.millis()
-        if now - last_touch_time > 1000:
-            scroll_step = 0
-            
-        # 【下スクロール判定: 0 -> 1 -> 2】
-        if p0 and scroll_step == 0:
-            scroll_step = 1
-            last_touch_time = now
-        elif p1 and scroll_step == 1:
-            scroll_step = 2
-            last_touch_time = now
-        elif p2 and scroll_step == 2:
-            scroll_val = -1 # 下スクロール(HID側でマイナスかプラスかはOS依存、適宜調整)
-            scroll_step = 0
-            
-        # 【上スクロール判定: 2 -> 1 -> 0】
-        elif p2 and scroll_step == 0:
-            scroll_step = -1
-            last_touch_time = now
-        elif p1 and scroll_step == -1:
-            scroll_step = -2
-            last_touch_time = now
-        elif p0 and scroll_step == -2:
-            scroll_val = 1  # 上スクロール
-            scroll_step = 0
-            
-        basic.pause(20)
+        control.wait_micros(20000) # 20ms待機
 
-# バックグラウンドタスクの起動
-control.in_background(stuck_monitor)
+control.in_background(background_monitor)
 
-# --- 傾き（重力）除去と移動量計算関数 ---
-def calculate_movement():
-    # 履歴の差分を取ることで、持続的な重力加速度（傾き）を相殺し、
-    # 手を「シュッ」と動かした時の平行移動（高周波成分）だけを抽出します。
-    diff_x = hist_x[0] - hist_x[3]
-    diff_y = hist_y[0] - hist_y[3]
+
+# --- 平行移動・ノイズ除去フィルター ---
+def process_acceleration(history):
+    # 3回分の移動平均を算出
+    avg = (history[0] + history[1] + history[2]) / 3
     
-    # 不感帯（デッドゾーン）の設定：小さなノイズ（手の震えなど）を無視
-    if abs(diff_x) < 80:
-        diff_x = 0
-    if abs(diff_y) < 80:
-        diff_y = 0
+    # 傾き（重力）による常時入力を防ぐための不感帯（デッドゾーン）処理
+    # 平行移動の「一瞬の加速」だけを拾うため、閾値を設定
+    THRESHOLD = 150 
+    if abs(avg) < THRESHOLD:
+        return 0
         
-    # 可変速（加速）アルゴリズム
-    # ゆっくり（値が小さい）なら移動量小、速い（値が大きい）なら二次関数的に移動量大
-    move_x = int((diff_x / 100) * (abs(diff_x) / 100))
-    move_y = int((diff_y / 100) * (abs(diff_y) / 100))
+    # 閾値を超えた分を計算
+    sign = 1 if avg > 0 else -1
+    diff = abs(avg) - THRESHOLD
     
-    # 向きの調整（ロゴ右・A正面の座標系に合わせる。必要に応じて `-` を反転させてください）
-    return move_x, move_y
-
-# --- メイン初期化とループ ---
-# Bluetoothマウスサービスの開始
-# (拡張機能の仕様に合わせて呼び出しています。実際のAPI名が `mouse.start_mouse_service()` である前提)
-mouse.start_mouse_service()
-
-while True:
-    # タッチロゴに触れているか確認
-    if input.logo_is_pressed():
-        # ======= マウスモード =======
-        #basic.show_icon(IconNames.SMALL_DIAMOND) # マウスモード中のインジケータ
-        led.plot(0, 0)
-        led.unplot(0, 4)
-        # 移動量の計算
-        mx, my = calculate_movement()
-        
-        # スクロール値の取得とリセット
-        curr_scroll = scroll_val
-        scroll_val = 0 
-        
-        # Bluetooth一括送信
-        # hold=Trueにすることで、ボタンが押されている間は「長押し維持」になります。
-        # ボタンA -> left, ボタンB -> right
-        mouse.send(mx, my, btn_a_pressed, False, btn_b_pressed, curr_scroll, True)
-        
+    # 【移動量の可変処理】
+    # ゆっくり（変化小）なら小さく、早く（変化大）なら乗算して大きく動かす
+    if diff < 300:
+        move = diff * 0.03 * sign  # ゆっくり動かした時
     else:
-        # ======= キーボードモード =======
-        #basic.show_icon(IconNames.STICK_FIGURE) # キーボードモード中のインジケータ
-        led.plot(0, 4)
-        led.unplot(0, 0)
-        # 今回は何もしないため空けておきます
+        move = diff * 0.1 * sign   # 素早く動かした時
+        
+    return int(move)
+
+
+# --- 初期設定 ---
+update_mode_led()
+# 必要に応じて、ここでBluetoothマウスサービスの開始処理を呼び出します
+mouse.start_mouse_service() 
+
+
+# --- メインループ ---
+while True:
+    if current_mode == MODE_MOUSE:
+        # 1. 加速度から移動量の算出
+        move_x = process_acceleration(acc_x_history)
+        move_y = process_acceleration(acc_y_history)
+        
+        # 2. スクロール処理 (P0タッチ時)
+        scroll_val = 0
+        if p0_now:
+            # P0タッチ中は、前後の加速度(Y軸)をスクロールに変換
+            if abs(move_y) > 0:
+                scroll_val = 1 if move_y > 0 else -1
+                move_y = 0 # スクロール中はカーソル上下移動を相殺
+        
+        # 3. ボタン状態の変化チェック
+        # 長押し(hold)に対応するため、状態が変わったとき、またはボタンが押され続けている時に送信
+        is_changed = (move_x != 0 or move_y != 0 or scroll_val != 0 or 
+                      btn_a_now != btn_a_prev or btn_b_now != btn_b_prev or btn_a_now or btn_b_now)
+        
+        if is_changed:
+            # hold=Trueにすることで、ボタンが押されている間はドラッグ（長押し）状態を維持します
+            # mouse.send(x, y, left, middle, right, scroll, hold)
+            mouse.send(move_x, move_y, btn_a_now, False, btn_b_now, scroll_val, True)
+            
+        # 前回の状態を保存
+        btn_a_prev = btn_a_now
+        btn_b_prev = btn_b_now
+
+    elif current_mode == MODE_KEYBOARD:
+        # キーボードモード時は待機（今回は何も動作させない）
         pass
         
-    basic.pause(20)
+    basic.pause(20) # メインループの制御周期 (20ms)
