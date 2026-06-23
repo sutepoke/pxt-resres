@@ -49,25 +49,31 @@ input.on_logo_event(TouchButtonEvent.TOUCHED, on_logo_touched)
 def process_acc(xy: number):
     
     if xy == 0:
-        history = acc_x_history
+        for i in range (3):
+        history[i] = int(acc_x_history[i] *0.1)
     else:
-        history = acc_y_history
-    # 3回分の移動平均を算出
-    avg = (history[0] + history[1] + history[2]) / 3
+        for i in range (3):
+        history[i] = int(acc_y_history[i] *0.1)
+    
+
+    # 4回分の移動平均を算出
+    avg = (history[0] + history[1] + history[2] + history[3] ) / 4
+    
     # 傾き（重力）による常時入力を防ぐための不感帯（デッドゾーン）処理
     # 平行移動の「一瞬の加速」だけを拾うため、閾値を設定
-    THRESHOLD = 150
-    if abs(avg) < THRESHOLD:
+    if avg = history[0]:
         return 0
+    THRESHOLD = 15
+
     sign = 1 if avg > 0 else -1
     diff = abs(avg) - THRESHOLD
     # 【移動量の可変処理】
     # ゆっくり（変化小）なら小さく、早く（変化大）なら乗算して大きく動かす
-    if diff < 300:
-        move = diff * 0.03 * sign
+    if diff < 30:
+        move = diff * 0.3 * sign
     else:
         # ゆっくり動かした時
-        move = diff * 0.1 * sign
+        move = diff * 1 * sign
     # 素早く動かした時
     return int(move)
 def update_mode_led():
@@ -81,8 +87,8 @@ btn_b_now = False
 btn_a_now = False
 p0_now = False
 current_mode = MODE_MOUSE
-acc_x_history = [0, 0, 0]
-acc_y_history = [0, 0, 0]
+acc_x_history = [0, 0, 0, 0]
+acc_y_history = [0, 0, 0, 0]
 
 # 初期設定
 update_mode_led()
