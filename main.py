@@ -1,16 +1,6 @@
 """
 
---- モード切り替え関数 ---
-
-"""
-"""
-
 --- 初期設定 ---
-
-"""
-"""
-
-拡張機能 `bluetooth bsieve/rmicrobit-pxt-blehid` がプロジェクトに追加されている前提です
 
 """
 """
@@ -20,12 +10,22 @@
 """
 """
 
-ボタンとタッチの現在の状態 (True: 押されている / False: 離されている)
-
-"""
-"""
-
 前回のボタン状態（変化を検知するため）
+
+"""
+"""
+
+--- モード切り替え関数 ---
+
+"""
+"""
+
+拡張機能 `bluetooth bsieve/rmicrobit-pxt-blehid` がプロジェクトに追加されている前提です
+
+"""
+"""
+
+ボタンとタッチの現在の状態 (True: 押されている / False: 離されている)
 
 """
 """
@@ -33,10 +33,8 @@
 --- 定数とグローバル変数 ---
 
 """
-MODE_MOUSE = 0
-MODE_KEYBOARD = 1
-
 # ロゴタッチでモード切替（押して離した時などに反応）
+
 def on_logo_touched():
     global current_mode
     if current_mode == MODE_MOUSE:
@@ -46,27 +44,39 @@ def on_logo_touched():
     update_mode_led()
 input.on_logo_event(TouchButtonEvent.TOUCHED, on_logo_touched)
 
+def prosses_deg(x,y,z):
+    # ピッチ = \mathrm{atan2}(y, \sqrt{x^2 + z^2})
+    pich_rad = Math.atan2(y, z)
+    pich_deg = pich_rad *(180/Math.PI)
+
+    # ロール = \mathrm{atan2}(-x, z)
+    rool_rad = Math.atan2(-x, z)
+    rool_deg = rool_rad *(180/Math.PI)
+    return (pich_deg,rool_deg)
+
 def process_acc(xy: number):
+    global history, avg, THRESHOLD, diff
+    1 * 1
     # ピッチ = \mathrm{atan2}(y, \sqrt{x^2 + z^2})
     # ロール = \mathrm{atan2}(-x, z)
-    history=[0,0,0,0]
+    history = [0, 0, 0, 0]
     if xy == 0:
-        for i in range (3):
-            history[i] = int(acc_x_history[i] *0.1)
+        i = 0
+        while i < 3:
+            history[i] = int(acc_x_history[i] * 0.1)
+            i += 1
     else:
-        for i in range (3):
-            history[i] = int(acc_y_history[i] *0.1)
-    
-
+        i = 0
+        while i < 3:
+            history[i] = int(acc_y_history[i] * 0.1)
+            i += 1
     # 4回分の移動平均を算出
-    avg = (history[0] + history[1] + history[2] + history[3] ) / 4
-    
+    avg = (history[0] + history[1] + history[2] + history[3]) / 4
     # 傾き（重力）による常時入力を防ぐための不感帯（デッドゾーン）処理
     # 平行移動の「一瞬の加速」だけを拾うため、閾値を設定
     if avg == history[0]:
         return 0
     THRESHOLD = 15
-
     sign = 1 if avg > 0 else -1
     diff = abs(avg) - THRESHOLD
     # 【移動量の可変処理】
@@ -88,16 +98,24 @@ def update_mode_led():
 btn_b_now = False
 btn_a_now = False
 p0_now = False
+diff = 0
+THRESHOLD = 0
+avg = 0
+history: List[number] = []
+MODE_MOUSE = 0
+current_mode = 0
+MODE_KEYBOARD = 0
+MODE_KEYBOARD = 1
 current_mode = MODE_MOUSE
 acc_x_history = [0, 0, 0, 0]
 acc_y_history = [0, 0, 0, 0]
-acc_Z_history = [0, 0, 0, 0]
-
+acc_z_history = [0, 0, 0, 0]
 # 初期設定
 update_mode_led()
 # 必要に応じて、ここでBluetoothマウスサービスの開始処理を呼び出します
 mouse.start_mouse_service()
 # --- メインループ ---
+
 def on_forever():
     # キーボードモード時は待機（今回は何も動作させない）
     if current_mode == MODE_MOUSE:
@@ -144,14 +162,15 @@ def on_in_background():
         # 必要に応じてxとyの軸や符号を調整してください。
         raw_x = input.acceleration(Dimension.X)
         raw_y = input.acceleration(Dimension.Y)
-        raw_Z = input.acceleration(Dimension.Z)
+        raw_z = input.acceleration(Dimension.Z)
         # 履歴の更新（最新を先頭に挿入し、古いものを削除）
         acc_x_history.insert_at(0, raw_x)
         acc_x_history.pop()
         acc_y_history.insert_at(0, raw_y)
         acc_y_history.pop()
-        acc_Z_history.insert_at(0, raw_Z)
-        acc_Z_history.pop()
+        acc_z_history.insert_at(0, raw_z)
+        acc_z_history.pop()
+        (pich,rool)=prosses_deg(raw_x,raw_y,raw_z)
         # control.wait_micros(20000)
         basic.pause(20)
 control.in_background(on_in_background)

@@ -1,12 +1,10 @@
-/** --- モード切り替え関数 --- */
 /** --- 初期設定 --- */
-/** 拡張機能 `bluetooth bsieve/rmicrobit-pxt-blehid` がプロジェクトに追加されている前提です */
 /** ※MakeCodeの「拡張機能」から上記URL/識別子を追加してください。 */
-/** ボタンとタッチの現在の状態 (True: 押されている / False: 離されている) */
 /** 前回のボタン状態（変化を検知するため） */
+/** --- モード切り替え関数 --- */
+/** 拡張機能 `bluetooth bsieve/rmicrobit-pxt-blehid` がプロジェクトに追加されている前提です */
+/** ボタンとタッチの現在の状態 (True: 押されている / False: 離されている) */
 /** --- 定数とグローバル変数 --- */
-let MODE_MOUSE = 0
-let MODE_KEYBOARD = 1
 //  ロゴタッチでモード切替（押して離した時などに反応）
 input.onLogoEvent(TouchButtonEvent.Touched, function on_logo_touched() {
     
@@ -18,33 +16,49 @@ input.onLogoEvent(TouchButtonEvent.Touched, function on_logo_touched() {
     
     update_mode_led()
 })
+function prosses_deg(x: number, y: number, z: number): number[] {
+    //  ピッチ = \mathrm{atan2}(y, \sqrt{x^2 + z^2})
+    let pich_rad = Math.atan2(y, z)
+    let pich_deg = pich_rad * (180 / Math.PI)
+    //  ロール = \mathrm{atan2}(-x, z)
+    let rool_rad = Math.atan2(-x, z)
+    let rool_deg = rool_rad * (180 / Math.PI)
+    return [pich_deg, rool_deg]
+}
+
 function process_acc(xy: number): number {
     let i: number;
     let move: number;
+    
+    1 * 1
     //  ピッチ = \mathrm{atan2}(y, \sqrt{x^2 + z^2})
     //  ロール = \mathrm{atan2}(-x, z)
-    let history = [0, 0, 0, 0]
+    history = [0, 0, 0, 0]
     if (xy == 0) {
-        for (i = 0; i < 3; i++) {
+        i = 0
+        while (i < 3) {
             history[i] = Math.trunc(acc_x_history[i] * 0.1)
+            i += 1
         }
     } else {
-        for (i = 0; i < 3; i++) {
+        i = 0
+        while (i < 3) {
             history[i] = Math.trunc(acc_y_history[i] * 0.1)
+            i += 1
         }
     }
     
     //  4回分の移動平均を算出
-    let avg = (history[0] + history[1] + history[2] + history[3]) / 4
+    avg = (history[0] + history[1] + history[2] + history[3]) / 4
     //  傾き（重力）による常時入力を防ぐための不感帯（デッドゾーン）処理
     //  平行移動の「一瞬の加速」だけを拾うため、閾値を設定
     if (avg == history[0]) {
         return 0
     }
     
-    let THRESHOLD = 15
+    THRESHOLD = 15
     let sign = avg > 0 ? 1 : -1
-    let diff = Math.abs(avg) - THRESHOLD
+    diff = Math.abs(avg) - THRESHOLD
     //  【移動量の可変処理】
     //  ゆっくり（変化小）なら小さく、早く（変化大）なら乗算して大きく動かす
     if (diff < 30) {
@@ -72,10 +86,18 @@ function update_mode_led() {
 let btn_b_now = false
 let btn_a_now = false
 let p0_now = false
-let current_mode = MODE_MOUSE
+let diff = 0
+let THRESHOLD = 0
+let avg = 0
+let history : number[] = []
+let MODE_MOUSE = 0
+let current_mode = 0
+let MODE_KEYBOARD = 0
+MODE_KEYBOARD = 1
+current_mode = MODE_MOUSE
 let acc_x_history = [0, 0, 0, 0]
 let acc_y_history = [0, 0, 0, 0]
-let acc_Z_history = [0, 0, 0, 0]
+let acc_z_history = [0, 0, 0, 0]
 //  初期設定
 update_mode_led()
 //  必要に応じて、ここでBluetoothマウスサービスの開始処理を呼び出します
@@ -125,7 +147,7 @@ basic.forever(function on_forever() {
 control.inBackground(function on_in_background() {
     let raw_x: number;
     let raw_y: number;
-    let raw_Z: number;
+    let raw_z: number;
     
     while (true) {
         //  ボタンとエッジコネクタ(P0)の「タッチされているか」の状態を取得
@@ -137,14 +159,15 @@ control.inBackground(function on_in_background() {
         //  必要に応じてxとyの軸や符号を調整してください。
         raw_x = input.acceleration(Dimension.X)
         raw_y = input.acceleration(Dimension.Y)
-        raw_Z = input.acceleration(Dimension.Z)
+        raw_z = input.acceleration(Dimension.Z)
         //  履歴の更新（最新を先頭に挿入し、古いものを削除）
         acc_x_history.insertAt(0, raw_x)
         _py.py_array_pop(acc_x_history)
         acc_y_history.insertAt(0, raw_y)
         _py.py_array_pop(acc_y_history)
-        acc_Z_history.insertAt(0, raw_Z)
-        _py.py_array_pop(acc_Z_history)
+        acc_z_history.insertAt(0, raw_z)
+        _py.py_array_pop(acc_z_history)
+        let [pich, rool] = prosses_deg(raw_x, raw_y, raw_z)
         //  control.wait_micros(20000)
         basic.pause(20)
     }
