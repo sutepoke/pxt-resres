@@ -49,13 +49,13 @@ input.on_logo_event(TouchButtonEvent.TOUCHED, on_logo_touched)
 def process_acc(xy: number):
     # ピッチ = \mathrm{atan2}(y, \sqrt{x^2 + z^2})
     # ロール = \mathrm{atan2}(-x, z)
-
+    history=[0,0,0,0]
     if xy == 0:
         for i in range (3):
-        history[i] = int(acc_x_history[i] *0.1)
+            history[i] = int(acc_x_history[i] *0.1)
     else:
         for i in range (3):
-        history[i] = int(acc_y_history[i] *0.1)
+            history[i] = int(acc_y_history[i] *0.1)
     
 
     # 4回分の移動平均を算出
@@ -63,7 +63,7 @@ def process_acc(xy: number):
     
     # 傾き（重力）による常時入力を防ぐための不感帯（デッドゾーン）処理
     # 平行移動の「一瞬の加速」だけを拾うため、閾値を設定
-    if avg = history[0]:
+    if avg == history[0]:
         return 0
     THRESHOLD = 15
 
@@ -91,7 +91,7 @@ p0_now = False
 current_mode = MODE_MOUSE
 acc_x_history = [0, 0, 0, 0]
 acc_y_history = [0, 0, 0, 0]
-acc_z_history = [0, 0, 0, 0]
+acc_Z_history = [0, 0, 0, 0]
 
 # 初期設定
 update_mode_led()
@@ -144,14 +144,14 @@ def on_in_background():
         # 必要に応じてxとyの軸や符号を調整してください。
         raw_x = input.acceleration(Dimension.X)
         raw_y = input.acceleration(Dimension.Y)
-        raw_z = input.acceleration(Dimension.z)
+        raw_Z = input.acceleration(Dimension.Z)
         # 履歴の更新（最新を先頭に挿入し、古いものを削除）
         acc_x_history.insert_at(0, raw_x)
         acc_x_history.pop()
         acc_y_history.insert_at(0, raw_y)
         acc_y_history.pop()
-        acc_z_history.insert_at(0, raw_w)
-        acc_z_history.pop()
+        acc_Z_history.insert_at(0, raw_Z)
+        acc_Z_history.pop()
         # control.wait_micros(20000)
         basic.pause(20)
 control.in_background(on_in_background)

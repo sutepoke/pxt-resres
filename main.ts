@@ -19,32 +19,39 @@ input.onLogoEvent(TouchButtonEvent.Touched, function on_logo_touched() {
     update_mode_led()
 })
 function process_acc(xy: number): number {
-    let history: number[];
+    let i: number;
     let move: number;
+    //  ピッチ = \mathrm{atan2}(y, \sqrt{x^2 + z^2})
+    //  ロール = \mathrm{atan2}(-x, z)
+    let history = [0, 0, 0, 0]
     if (xy == 0) {
-        history = acc_x_history
+        for (i = 0; i < 3; i++) {
+            history[i] = Math.trunc(acc_x_history[i] * 0.1)
+        }
     } else {
-        history = acc_y_history
+        for (i = 0; i < 3; i++) {
+            history[i] = Math.trunc(acc_y_history[i] * 0.1)
+        }
     }
     
-    //  3回分の移動平均を算出
-    let avg = (history[0] + history[1] + history[2]) / 3
+    //  4回分の移動平均を算出
+    let avg = (history[0] + history[1] + history[2] + history[3]) / 4
     //  傾き（重力）による常時入力を防ぐための不感帯（デッドゾーン）処理
     //  平行移動の「一瞬の加速」だけを拾うため、閾値を設定
-    let THRESHOLD = 150
-    if (Math.abs(avg) < THRESHOLD) {
+    if (avg == history[0]) {
         return 0
     }
     
+    let THRESHOLD = 15
     let sign = avg > 0 ? 1 : -1
     let diff = Math.abs(avg) - THRESHOLD
     //  【移動量の可変処理】
     //  ゆっくり（変化小）なら小さく、早く（変化大）なら乗算して大きく動かす
-    if (diff < 300) {
-        move = diff * 0.03 * sign
+    if (diff < 30) {
+        move = diff * 0.3 * sign
     } else {
         //  ゆっくり動かした時
-        move = diff * 0.1 * sign
+        move = diff * 1 * sign
     }
     
     //  素早く動かした時
@@ -66,8 +73,9 @@ let btn_b_now = false
 let btn_a_now = false
 let p0_now = false
 let current_mode = MODE_MOUSE
-let acc_x_history = [0, 0, 0]
-let acc_y_history = [0, 0, 0]
+let acc_x_history = [0, 0, 0, 0]
+let acc_y_history = [0, 0, 0, 0]
+let acc_Z_history = [0, 0, 0, 0]
 //  初期設定
 update_mode_led()
 //  必要に応じて、ここでBluetoothマウスサービスの開始処理を呼び出します
@@ -117,6 +125,7 @@ basic.forever(function on_forever() {
 control.inBackground(function on_in_background() {
     let raw_x: number;
     let raw_y: number;
+    let raw_Z: number;
     
     while (true) {
         //  ボタンとエッジコネクタ(P0)の「タッチされているか」の状態を取得
@@ -128,12 +137,15 @@ control.inBackground(function on_in_background() {
         //  必要に応じてxとyの軸や符号を調整してください。
         raw_x = input.acceleration(Dimension.X)
         raw_y = input.acceleration(Dimension.Y)
+        raw_Z = input.acceleration(Dimension.Z)
         //  履歴の更新（最新を先頭に挿入し、古いものを削除）
         acc_x_history.insertAt(0, raw_x)
         _py.py_array_pop(acc_x_history)
         acc_y_history.insertAt(0, raw_y)
         _py.py_array_pop(acc_y_history)
+        acc_Z_history.insertAt(0, raw_Z)
+        _py.py_array_pop(acc_Z_history)
         //  control.wait_micros(20000)
-        basic.pause(200)
+        basic.pause(20)
     }
 })
