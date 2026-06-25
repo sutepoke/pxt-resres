@@ -55,7 +55,7 @@ def prosses_deg(x,y,z):
     return (pitch_deg,rool_deg)
 
 def process_acc(xy: number):
-    global history, avg, THRESHOLD, diff
+    global history, avg, 　THRESHOLD, diff
     # ピッチ = \mathrm{atan2}(y, \sqrt{x^2 + z^2})
     # ロール = \mathrm{atan2}(-x, z)
     history = [0, 0, 0, 0]
@@ -64,7 +64,7 @@ def process_acc(xy: number):
         while i < 3:
             history[i] = acc_x_history[i] 
             i += 1
-    elif xy ==1:
+    elif xy ==1:　
         i = 0
         while i < 3:
             history[i] = acc_y_history[i] 
@@ -80,11 +80,14 @@ def process_acc(xy: number):
     # 平行移動の「一瞬の加速」だけを拾うため、閾値を設定
     #if avg == history[0]:
     #    return 0
-    THRESHOLD = 60
+    THRESHOLD = 3
+    THRESHOLD2 = 50
     if abs(abs(avg)-abs(history[0]))< THRESHOLD :
-        move= avg 
+        move= 0
+    elif abs(abs(avg)-abs(history[0]))< THRESHOLD2 :
+         move= avg
     else:
-        move= 50
+        move= 60
     #sign = 1 if avg > 0 else -1
     #diff = abs(avg) - THRESHOLD
     # 【移動量の可変処理】
@@ -109,10 +112,9 @@ p0_now = False
 diff = 0
 THRESHOLD = 0
 avg = 0
+move_y2=0
 history: List[number] = []
 MODE_MOUSE = 0
-current_mode = 0
-MODE_KEYBOARD = 0
 MODE_KEYBOARD = 1
 current_mode = MODE_MOUSE
 acc_x_history = [0, 0, 0, 0]
@@ -126,8 +128,9 @@ mouse.start_mouse_service()
 # --- メインループ ---
 
 def on_forever():
-    move_x = process_acc(0)
-    move_y = process_acc(1)
+    global move_y2
+    move_x = process_acc(1) *-1
+    move_y = process_acc(0)
 
     # キーボードモード時は待機（今回は何も動作させない）
     if current_mode == MODE_MOUSE:
@@ -139,8 +142,10 @@ def on_forever():
         scroll_val = 0
         if p0_now:
             # P0タッチ中は、前後の加速度(Y軸)をスクロールに変換
-            if abs(move_y) > 0:
-                scroll_val = 2 if move_y > 0 else -2
+            if abs(move_y) > 0 :
+                #scroll_val = 1 if move_y > 0 else -1
+                scroll_val=(move_y2-move_y)*0.1
+                move_y2 = move_y
                 move_y = 0
         # スクロール中はカーソル上下移動を相殺
         # 3. ボタン状態の変化チェック
