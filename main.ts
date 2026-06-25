@@ -17,33 +17,38 @@ input.onLogoEvent(TouchButtonEvent.Touched, function on_logo_touched() {
     update_mode_led()
 })
 function prosses_deg(x: number, y: number, z: number): number[] {
-    //  ピッチ = \mathrm{atan2}(y, \sqrt{x^2 + z^2})
-    let pich_rad = Math.atan2(y, z)
-    let pich_deg = pich_rad * (180 / Math.PI)
-    //  ロール = \mathrm{atan2}(-x, z)
-    let rool_rad = Math.atan2(-x, z)
+    //  ピッチ
+    let pitch_rad = Math.atan2(-x, z)
+    let pitch_deg = pitch_rad * (180 / Math.PI)
+    //  ロール 
+    let rool_rad = Math.atan2(-y, -z)
     let rool_deg = rool_rad * (180 / Math.PI)
-    return [pich_deg, rool_deg]
+    return [pitch_deg, rool_deg]
 }
 
 function process_acc(xy: number): number {
     let i: number;
     let move: number;
     
-    1 * 1
     //  ピッチ = \mathrm{atan2}(y, \sqrt{x^2 + z^2})
     //  ロール = \mathrm{atan2}(-x, z)
     history = [0, 0, 0, 0]
     if (xy == 0) {
         i = 0
         while (i < 3) {
-            history[i] = Math.trunc(acc_x_history[i] * 0.1)
+            history[i] = acc_x_history[i]
             i += 1
         }
-    } else {
+    } else if (xy == 1) {
         i = 0
         while (i < 3) {
-            history[i] = Math.trunc(acc_y_history[i] * 0.1)
+            history[i] = acc_y_history[i]
+            i += 1
+        }
+    } else if (xy == 2) {
+        i = 0
+        while (i < 3) {
+            history[i] = Math.trunc(acc_z_history[i] * 0.1)
             i += 1
         }
     }
@@ -52,22 +57,24 @@ function process_acc(xy: number): number {
     avg = (history[0] + history[1] + history[2] + history[3]) / 4
     //  傾き（重力）による常時入力を防ぐための不感帯（デッドゾーン）処理
     //  平行移動の「一瞬の加速」だけを拾うため、閾値を設定
-    if (avg == history[0]) {
-        return 0
+    // if avg == history[0]:
+    //     return 0
+    THRESHOLD = 60
+    if (Math.abs(Math.abs(avg) - Math.abs(history[0])) < THRESHOLD) {
+        move = avg
+    } else {
+        move = 50
     }
     
-    THRESHOLD = 15
-    let sign = avg > 0 ? 1 : -1
-    diff = Math.abs(avg) - THRESHOLD
+    // sign = 1 if avg > 0 else -1
+    // diff = abs(avg) - THRESHOLD
     //  【移動量の可変処理】
     //  ゆっくり（変化小）なら小さく、早く（変化大）なら乗算して大きく動かす
-    if (diff < 30) {
-        move = diff * 0.3 * sign
-    } else {
-        //  ゆっくり動かした時
-        move = diff * 1 * sign
-    }
-    
+    // if diff < 50:
+    //     move = diff * 1.5 * sign
+    // else:
+    //  ゆっくり動かした時
+    //     move = diff * 0.8 * sign
     //  素早く動かした時
     return Math.trunc(move)
 }
@@ -97,29 +104,31 @@ MODE_KEYBOARD = 1
 current_mode = MODE_MOUSE
 let acc_x_history = [0, 0, 0, 0]
 let acc_y_history = [0, 0, 0, 0]
-let acc_z_history = [0, 0, 0, 0]
+let acc_z_history = [-1023, -1023, -1023, -1023]
 //  初期設定
 update_mode_led()
+// serial.redirect_to_usb()
 //  必要に応じて、ここでBluetoothマウスサービスの開始処理を呼び出します
 mouse.startMouseService()
 //  --- メインループ ---
 basic.forever(function on_forever() {
-    let move_x: number;
-    let move_y: number;
     let scroll_val: number;
     let is_changed: any;
     let btn_a_prev2: boolean;
     let btn_b_prev2: boolean;
+    let move_x = process_acc(0)
+    let move_y = process_acc(1)
     //  キーボードモード時は待機（今回は何も動作させない）
     if (current_mode == MODE_MOUSE) {
-        move_x = process_acc(0)
-        move_y = process_acc(1)
+        // move_z = process_acc(3)
+        // move_x = input.rotation(Rotation.ROLL)
+        // move_y = input.rotation(Rotation.PITCH)
         //  2. スクロール処理 (P0タッチ時)
         scroll_val = 0
         if (p0_now) {
             //  P0タッチ中は、前後の加速度(Y軸)をスクロールに変換
             if (Math.abs(move_y) > 0) {
-                scroll_val = move_y > 0 ? 1 : -1
+                scroll_val = move_y > 0 ? 2 : -2
                 move_y = 0
             }
             
@@ -142,12 +151,14 @@ basic.forever(function on_forever() {
         
     }
     
+    // (pitch,rool)=prosses_deg(move_x,move_y,move_z)
+    serial.writeValue("x     ", move_x)
+    serial.writeValue("y     ", move_y)
+    // serial.write_value("y     ",rool )
+    // serial.write_value("y ", raw_y)
     basic.pause(20)
 })
 control.inBackground(function on_in_background() {
-    let raw_x: number;
-    let raw_y: number;
-    let raw_z: number;
     
     while (true) {
         //  ボタンとエッジコネクタ(P0)の「タッチされているか」の状態を取得
@@ -157,17 +168,23 @@ control.inBackground(function on_in_background() {
         //  加速度センサーの値を取得 (-2046 〜 2046)
         //  ※表面を正面（ロゴが右、Aボタンが手前）にした場合、
         //  必要に応じてxとyの軸や符号を調整してください。
-        raw_x = input.acceleration(Dimension.X)
-        raw_y = input.acceleration(Dimension.Y)
-        raw_z = input.acceleration(Dimension.Z)
+        // raw_x = input.acceleration(Dimension.X)
+        // raw_y = input.acceleration(Dimension.Y)
+        // raw_z = input.acceleration(Dimension.Z)
         //  履歴の更新（最新を先頭に挿入し、古いものを削除）
-        acc_x_history.insertAt(0, raw_x)
+        acc_x_history.insertAt(0, input.rotation(Rotation.Roll))
+        // acc_x_history.insert_at(0, raw_x)
         _py.py_array_pop(acc_x_history)
-        acc_y_history.insertAt(0, raw_y)
+        acc_y_history.insertAt(0, input.rotation(Rotation.Pitch))
+        // acc_y_history.insert_at(0, raw_y)
         _py.py_array_pop(acc_y_history)
-        acc_z_history.insertAt(0, raw_z)
-        _py.py_array_pop(acc_z_history)
-        let [pich, rool] = prosses_deg(raw_x, raw_y, raw_z)
+        // acc_z_history.insert_at(0, raw_z)
+        // acc_z_history.pop()
+        // (pitch,rool)=prosses_deg(raw_x,raw_y,raw_z)
+        // serial.write_value("x     ", input.rotation(Rotation.ROLL))
+        // serial.write_value("rool_x ", rool)
+        // serial.write_value("y ", raw_y)
+        // serial.write_value("z", raw_z)
         //  control.wait_micros(20000)
         basic.pause(20)
     }

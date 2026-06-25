@@ -45,47 +45,55 @@ def on_logo_touched():
 input.on_logo_event(TouchButtonEvent.TOUCHED, on_logo_touched)
 
 def prosses_deg(x,y,z):
-    # ピッチ = \mathrm{atan2}(y, \sqrt{x^2 + z^2})
-    pich_rad = Math.atan2(y, z)
-    pich_deg = pich_rad *(180/Math.PI)
+    # ピッチ
+    pitch_rad = Math.atan2(-x, z)
+    pitch_deg = pitch_rad *(180/Math.PI)
 
-    # ロール = \mathrm{atan2}(-x, z)
-    rool_rad = Math.atan2(-x, z)
+    # ロール 
+    rool_rad = Math.atan2(-y, -z)
     rool_deg = rool_rad *(180/Math.PI)
-    return (pich_deg,rool_deg)
+    return (pitch_deg,rool_deg)
 
 def process_acc(xy: number):
     global history, avg, THRESHOLD, diff
-    1 * 1
     # ピッチ = \mathrm{atan2}(y, \sqrt{x^2 + z^2})
     # ロール = \mathrm{atan2}(-x, z)
     history = [0, 0, 0, 0]
     if xy == 0:
         i = 0
         while i < 3:
-            history[i] = int(acc_x_history[i] * 0.1)
+            history[i] = acc_x_history[i] 
             i += 1
-    else:
+    elif xy ==1:
         i = 0
         while i < 3:
-            history[i] = int(acc_y_history[i] * 0.1)
+            history[i] = acc_y_history[i] 
             i += 1
+    elif xy==2:
+        i=0
+        while i<3:
+            history[i] = int(acc_z_history[i] * 0.1)
+            i+=1
     # 4回分の移動平均を算出
     avg = (history[0] + history[1] + history[2] + history[3]) / 4
     # 傾き（重力）による常時入力を防ぐための不感帯（デッドゾーン）処理
     # 平行移動の「一瞬の加速」だけを拾うため、閾値を設定
-    if avg == history[0]:
-        return 0
-    THRESHOLD = 15
-    sign = 1 if avg > 0 else -1
-    diff = abs(avg) - THRESHOLD
+    #if avg == history[0]:
+    #    return 0
+    THRESHOLD = 60
+    if abs(abs(avg)-abs(history[0]))< THRESHOLD :
+        move= avg 
+    else:
+        move= 50
+    #sign = 1 if avg > 0 else -1
+    #diff = abs(avg) - THRESHOLD
     # 【移動量の可変処理】
     # ゆっくり（変化小）なら小さく、早く（変化大）なら乗算して大きく動かす
-    if diff < 30:
-        move = diff * 0.3 * sign
-    else:
+    #if diff < 50:
+    #    move = diff * 1.5 * sign
+    #else:
         # ゆっくり動かした時
-        move = diff * 1 * sign
+    #    move = diff * 0.8 * sign
     # 素早く動かした時
     return int(move)
 def update_mode_led():
@@ -109,24 +117,30 @@ MODE_KEYBOARD = 1
 current_mode = MODE_MOUSE
 acc_x_history = [0, 0, 0, 0]
 acc_y_history = [0, 0, 0, 0]
-acc_z_history = [0, 0, 0, 0]
+acc_z_history = [-1023, -1023, -1023, -1023]
 # 初期設定
 update_mode_led()
+#serial.redirect_to_usb()
 # 必要に応じて、ここでBluetoothマウスサービスの開始処理を呼び出します
 mouse.start_mouse_service()
 # --- メインループ ---
 
 def on_forever():
+    move_x = process_acc(0)
+    move_y = process_acc(1)
+
     # キーボードモード時は待機（今回は何も動作させない）
     if current_mode == MODE_MOUSE:
-        move_x = process_acc(0)
-        move_y = process_acc(1)
+        #move_z = process_acc(3)
+        #move_x = input.rotation(Rotation.ROLL)
+        #move_y = input.rotation(Rotation.PITCH)
+
         # 2. スクロール処理 (P0タッチ時)
         scroll_val = 0
         if p0_now:
             # P0タッチ中は、前後の加速度(Y軸)をスクロールに変換
             if abs(move_y) > 0:
-                scroll_val = 1 if move_y > 0 else -1
+                scroll_val = 2 if move_y > 0 else -2
                 move_y = 0
         # スクロール中はカーソル上下移動を相殺
         # 3. ボタン状態の変化チェック
@@ -147,6 +161,12 @@ def on_forever():
         btn_b_prev2 = btn_b_now
     elif current_mode == MODE_KEYBOARD:
         pass
+    #(pitch,rool)=prosses_deg(move_x,move_y,move_z)
+    serial.write_value("x     ", move_x)
+    serial.write_value("y     ", move_y)
+    #serial.write_value("y     ",rool )
+    #serial.write_value("y ", raw_y)
+
     basic.pause(20)
 basic.forever(on_forever)
 
@@ -160,17 +180,24 @@ def on_in_background():
         # 加速度センサーの値を取得 (-2046 〜 2046)
         # ※表面を正面（ロゴが右、Aボタンが手前）にした場合、
         # 必要に応じてxとyの軸や符号を調整してください。
-        raw_x = input.acceleration(Dimension.X)
-        raw_y = input.acceleration(Dimension.Y)
-        raw_z = input.acceleration(Dimension.Z)
+        #raw_x = input.acceleration(Dimension.X)
+        #raw_y = input.acceleration(Dimension.Y)
+        #raw_z = input.acceleration(Dimension.Z)
         # 履歴の更新（最新を先頭に挿入し、古いものを削除）
-        acc_x_history.insert_at(0, raw_x)
+        acc_x_history.insert_at(0, input.rotation(Rotation.ROLL))
+        #acc_x_history.insert_at(0, raw_x)
         acc_x_history.pop()
-        acc_y_history.insert_at(0, raw_y)
+        acc_y_history.insert_at(0, input.rotation(Rotation.PITCH))
+        #acc_y_history.insert_at(0, raw_y)
         acc_y_history.pop()
-        acc_z_history.insert_at(0, raw_z)
-        acc_z_history.pop()
-        (pich,rool)=prosses_deg(raw_x,raw_y,raw_z)
+        #acc_z_history.insert_at(0, raw_z)
+        #acc_z_history.pop()
+        #(pitch,rool)=prosses_deg(raw_x,raw_y,raw_z)
+        #serial.write_value("x     ", input.rotation(Rotation.ROLL))
+        #serial.write_value("rool_x ", rool)
+        #serial.write_value("y ", raw_y)
+
+        #serial.write_value("z", raw_z)
         # control.wait_micros(20000)
         basic.pause(20)
 control.in_background(on_in_background)
