@@ -55,7 +55,7 @@ def prosses_deg(x,y,z):
     return (pitch_deg,rool_deg)
 
 def process_acc(xy: number):
-    global history, avg, 　THRESHOLD, diff
+    global history, avg, THRESHOLD, diff
     # ピッチ = \mathrm{atan2}(y, \sqrt{x^2 + z^2})
     # ロール = \mathrm{atan2}(-x, z)
     history = [0, 0, 0, 0]
