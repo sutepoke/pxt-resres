@@ -59,11 +59,14 @@ function process_acc(xy: number): number {
     //  平行移動の「一瞬の加速」だけを拾うため、閾値を設定
     // if avg == history[0]:
     //     return 0
-    THRESHOLD = 60
+    THRESHOLD = 3
+    let THRESHOLD2 = 50
     if (Math.abs(Math.abs(avg) - Math.abs(history[0])) < THRESHOLD) {
+        move = 0
+    } else if (Math.abs(Math.abs(avg) - Math.abs(history[0])) < THRESHOLD2) {
         move = avg
     } else {
-        move = 50
+        move = 60
     }
     
     // sign = 1 if avg > 0 else -1
@@ -96,12 +99,11 @@ let p0_now = false
 let diff = 0
 let THRESHOLD = 0
 let avg = 0
+let move_y2 = 0
 let history : number[] = []
 let MODE_MOUSE = 0
-let current_mode = 0
-let MODE_KEYBOARD = 0
-MODE_KEYBOARD = 1
-current_mode = MODE_MOUSE
+let MODE_KEYBOARD = 1
+let current_mode = MODE_MOUSE
 let acc_x_history = [0, 0, 0, 0]
 let acc_y_history = [0, 0, 0, 0]
 let acc_z_history = [-1023, -1023, -1023, -1023]
@@ -116,8 +118,9 @@ basic.forever(function on_forever() {
     let is_changed: any;
     let btn_a_prev2: boolean;
     let btn_b_prev2: boolean;
-    let move_x = process_acc(0)
-    let move_y = process_acc(1)
+    
+    let move_x = process_acc(1) * -1
+    let move_y = process_acc(0)
     //  キーボードモード時は待機（今回は何も動作させない）
     if (current_mode == MODE_MOUSE) {
         // move_z = process_acc(3)
@@ -128,7 +131,9 @@ basic.forever(function on_forever() {
         if (p0_now) {
             //  P0タッチ中は、前後の加速度(Y軸)をスクロールに変換
             if (Math.abs(move_y) > 0) {
-                scroll_val = move_y > 0 ? 2 : -2
+                // scroll_val = 1 if move_y > 0 else -1
+                scroll_val = (move_y2 - move_y) * 0.1
+                move_y2 = move_y
                 move_y = 0
             }
             

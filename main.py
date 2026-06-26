@@ -36,12 +36,14 @@
 # ロゴタッチでモード切替（押して離した時などに反応）
 
 def on_logo_touched():
-    global current_mode
+    global current_mode,MODE_MOUSE,MODE_KEYBOARD
+    
     if current_mode == MODE_MOUSE:
         current_mode = MODE_KEYBOARD
-    else:
+    elif current_mode == MODE_KEYBOARD:
         current_mode = MODE_MOUSE
-    update_mode_led()
+    
+    #update_mode_led()
 input.on_logo_event(TouchButtonEvent.TOUCHED, on_logo_touched)
 
 def prosses_deg(x,y,z):
@@ -54,37 +56,59 @@ def prosses_deg(x,y,z):
     rool_deg = rool_rad *(180/Math.PI)
     return (pitch_deg,rool_deg)
 
-def process_acc(xy: number):
-    global history, avg, THRESHOLD, diff
+def process_acc():
+    global history, avg, diff,avg_x2 ,avg_y2
     # ピッチ = \mathrm{atan2}(y, \sqrt{x^2 + z^2})
     # ロール = \mathrm{atan2}(-x, z)
-    history = [0, 0, 0, 0]
-    if xy == 0:
-        i = 0
-        while i < 3:
-            history[i] = acc_x_history[i] 
-            i += 1
-    elif xy ==1:
-        i = 0
-        while i < 3:
-            history[i] = acc_y_history[i] 
-            i += 1
-    elif xy==2:
-        i=0
-        while i<3:
-            history[i] = int(acc_z_history[i] * 0.1)
-            i+=1
+    history_x = [0, 0, 0, 0]
+    history_y = [0, 0, 0, 0]
+    #if xy == 0:
+    i = 0
+    while i < 3:
+        history_x[i] = acc_x_history[i] 
+        history_y[i] = acc_y_history[i] 
+        i += 1
+    #elif xy ==1:　
+     #   i = 0
+    #    while i < 3:
+     #       history[i] = acc_y_history[i] 
+     #       i += 1
+    #elif xy==2:
+    #    i=0
+    #    while i<3:
+    #        history[i] = int(acc_z_history[i] * 0.1)
+    #        i+=1
     # 4回分の移動平均を算出
-    avg = (history[0] + history[1] + history[2] + history[3]) / 4
-    # 傾き（重力）による常時入力を防ぐための不感帯（デッドゾーン）処理
+    avg_x = (history_x[0] + history_x[1] + history_x[2] + history_x[3]) / 4
+    avg_y = (history_y[0] + history_y[1] + history_y[2] + history_y[3]) / 4
+        # 傾き（重力）による常時入力を防ぐための不感帯（デッドゾーン）処理
     # 平行移動の「一瞬の加速」だけを拾うため、閾値を設定
     #if avg == history[0]:
     #    return 0
-    THRESHOLD = 60
-    if abs(abs(avg)-abs(history[0]))< THRESHOLD :
-        move= avg 
+    #THRESHOLD = 3
+    #THRESHOLD2 = 50
+    avg_xa=abs(avg_x2-avg_x)
+    sign = 1 if avg_x > 0 else -1
+
+    if abs(avg_xa)< 3 :
+        move_px= 0
+    elif abs(avg_xa)< 50:
+        move_px= (avg_x2-avg_x)*sign
     else:
-        move= 50
+        move_px= 60* sign
+    avg_x2=avg_x
+
+    avg_ya=abs(avg_y2-avg_y)
+    sign = 1 if avg_y > 0 else -1
+
+    if abs(avg_ya)< 3 :
+        move_py= 0
+    elif abs(avg_ya)< 50:
+         move_py= (avg_y2-avg_y)* sign
+    else:
+        move_py= 60* sign
+    avg_y2=avg_y
+
     #sign = 1 if avg > 0 else -1
     #diff = abs(avg) - THRESHOLD
     # 【移動量の可変処理】
@@ -95,40 +119,56 @@ def process_acc(xy: number):
         # ゆっくり動かした時
     #    move = diff * 0.8 * sign
     # 素早く動かした時
-    return int(move)
+    return move_px,move_py
+
 def update_mode_led():
+    global current_mode,p0_now
     if current_mode == MODE_MOUSE:
-        led.plot(0, 0)
-        led.unplot(0, 4)
+        led.plot(4, 0)
+        led.unplot(4, 4)
     else:
-        led.plot(0, 4)
+        led.plot(4, 4)
+        led.unplot(4, 0)
+    
+    if p0_now == True :
+        led.plot(0, 0)
+    else:
         led.unplot(0, 0)
 btn_b_now = False
 btn_a_now = False
 p0_now = False
+#logo_now = False
 diff = 0
-THRESHOLD = 0
+#THRESHOLD = 0
 avg = 0
+avg_x2 = 0
+avg_y2 = 0
+move_y_val2=0
 history: List[number] = []
 MODE_MOUSE = 0
-current_mode = 0
-MODE_KEYBOARD = 0
 MODE_KEYBOARD = 1
 current_mode = MODE_MOUSE
 acc_x_history = [0, 0, 0, 0]
 acc_y_history = [0, 0, 0, 0]
 acc_z_history = [-1023, -1023, -1023, -1023]
 # 初期設定
-update_mode_led()
+#update_mode_led()
 #serial.redirect_to_usb()
 # 必要に応じて、ここでBluetoothマウスサービスの開始処理を呼び出します
 mouse.start_mouse_service()
 # --- メインループ ---
 
 def on_forever():
-    move_x = process_acc(0)
-    move_y = process_acc(1)
+    global move_y_val2
+    #move_x = process_acc(1) *-1
+    #move_y = process_acc(0)
+    
+    move_xr , move_yr = process_acc()
+    move_x = move_xr 
+    move_y = move_yr
 
+    #logo_touched()
+    update_mode_led()
     # キーボードモード時は待機（今回は何も動作させない）
     if current_mode == MODE_MOUSE:
         #move_z = process_acc(3)
@@ -139,8 +179,22 @@ def on_forever():
         scroll_val = 0
         if p0_now:
             # P0タッチ中は、前後の加速度(Y軸)をスクロールに変換
-            if abs(move_y) > 0:
-                scroll_val = 2 if move_y > 0 else -2
+            move_y_val=abs(move_y)
+            if move_y_val > 0 :
+                fugo = 1 if move_y > 0 else -1
+                val= abs(move_y_val2-move_y_val)
+                if val<2:
+                    scroll_val= 0
+                elif val<5:
+                    scroll_val= 1*fugo
+                elif val<15:
+                    scroll_val= 3*fugo 
+                elif val<30:
+                    scroll_val= 4*fugo
+                else:
+                    scroll_val= 5*fugo
+                #scroll_val=(move_y2-move_y)*0.5
+                move_y_val2 = move_y_val
                 move_y = 0
         # スクロール中はカーソル上下移動を相殺
         # 3. ボタン状態の変化チェック
@@ -171,12 +225,14 @@ def on_forever():
 basic.forever(on_forever)
 
 def on_in_background():
-    global btn_a_now, btn_b_now, p0_now
+    global btn_a_now, btn_b_now, p0_now #,logo_now
     while True:
+        #time1=input.running_time()
         # ボタンとエッジコネクタ(P0)の「タッチされているか」の状態を取得
         btn_a_now = input.button_is_pressed(Button.A)
         btn_b_now = input.button_is_pressed(Button.B)
         p0_now = input.pin_is_pressed(TouchPin.P0)
+        #logo_now= input.logo_is_pressed()
         # 加速度センサーの値を取得 (-2046 〜 2046)
         # ※表面を正面（ロゴが右、Aボタンが手前）にした場合、
         # 必要に応じてxとyの軸や符号を調整してください。
@@ -199,5 +255,8 @@ def on_in_background():
 
         #serial.write_value("z", raw_z)
         # control.wait_micros(20000)
+        #time2=input.running_time()
+
+        #serial.write_value("time", time2-time1)
         basic.pause(20)
 control.in_background(on_in_background)
