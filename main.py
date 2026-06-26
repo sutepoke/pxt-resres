@@ -54,28 +54,22 @@ def prosses_deg(x,y,z):
     rool_deg = rool_rad *(180/Math.PI)
     return (pitch_deg,rool_deg)
 
-def process_acc(xy: number):
+def process_acc():
     global history, avg, THRESHOLD, diff
     # ピッチ = \mathrm{atan2}(y, \sqrt{x^2 + z^2})
     # ロール = \mathrm{atan2}(-x, z)
-    history = [0, 0, 0, 0]
-    if xy == 0:
-        i = 0
-        while i < 3:
-            history[i] = acc_x_history[i] 
-            i += 1
-    elif xy ==1:　
-        i = 0
-        while i < 3:
-            history[i] = acc_y_history[i] 
-            i += 1
-    elif xy==2:
-        i=0
-        while i<3:
-            history[i] = int(acc_z_history[i] * 0.1)
-            i+=1
+    history_x = [0, 0, 0, 0]
+    history_y = [0, 0, 0, 0]
+    
+    i = 0
+    while i < 3:
+        history_x[i] = acc_x_history[i] 
+        history_y[i] = acc_x_history[i] 
+    i += 1
+    
     # 4回分の移動平均を算出
-    avg = (history[0] + history[1] + history[2] + history[3]) / 4
+    avg_x = (history_x[0] + history_x[1] + history_x[2] + history_x[3]) / 4
+    avg_y = (history_y[0] + history_y[1] + history_y[2] + history_y[3]) / 4
     # 傾き（重力）による常時入力を防ぐための不感帯（デッドゾーン）処理
     # 平行移動の「一瞬の加速」だけを拾うため、閾値を設定
     #if avg == history[0]:
@@ -85,7 +79,7 @@ def process_acc(xy: number):
     if abs(abs(avg)-abs(history[0]))< THRESHOLD :
         move= 0
     elif abs(abs(avg)-abs(history[0]))< THRESHOLD2 :
-         move= avg
+        move= avg
     else:
         move= 60
     #sign = 1 if avg > 0 else -1
@@ -98,7 +92,7 @@ def process_acc(xy: number):
         # ゆっくり動かした時
     #    move = diff * 0.8 * sign
     # 素早く動かした時
-    return int(move)
+    return int(move_acc_x,move_acc_y)
 def update_mode_led():
     if current_mode == MODE_MOUSE:
         led.plot(0, 0)

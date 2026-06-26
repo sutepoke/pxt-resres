@@ -32,7 +32,8 @@ function process_acc(xy: number): number {
     
     //  ピッチ = \mathrm{atan2}(y, \sqrt{x^2 + z^2})
     //  ロール = \mathrm{atan2}(-x, z)
-    history = [0, 0, 0, 0]
+    let history_x = [0, 0, 0, 0]
+    let history_y = [0, 0, 0, 0]
     if (xy == 0) {
         i = 0
         while (i < 3) {
