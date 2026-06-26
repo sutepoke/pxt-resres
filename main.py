@@ -55,7 +55,7 @@ def prosses_deg(x,y,z):
     return (pitch_deg,rool_deg)
 
 def process_acc():
-    global history, avg, THRESHOLD, diff
+    global acc_x_history,acc_y_history,avg_x_old ,avg_y_old
     # ピッチ = \mathrm{atan2}(y, \sqrt{x^2 + z^2})
     # ロール = \mathrm{atan2}(-x, z)
     history_x = [0, 0, 0, 0]
@@ -64,7 +64,7 @@ def process_acc():
     i = 0
     while i < 3:
         history_x[i] = acc_x_history[i] 
-        history_y[i] = acc_x_history[i] 
+        history_y[i] = acc_y_history[i] 
     i += 1
     
     # 4回分の移動平均を算出
@@ -74,14 +74,23 @@ def process_acc():
     # 平行移動の「一瞬の加速」だけを拾うため、閾値を設定
     #if avg == history[0]:
     #    return 0
-    THRESHOLD = 3
-    THRESHOLD2 = 50
-    if abs(abs(avg)-abs(history[0]))< THRESHOLD :
-        move= 0
-    elif abs(abs(avg)-abs(history[0]))< THRESHOLD2 :
-        move= avg
+    #THRESHOLD = 3
+    #THRESHOLD2 = 50
+    avg_move_x= avg_x_old-avg_x
+    sign = 1 if avg_x > 0 else -1
+    if abs(avg_move_x)< 3 :
+        move_acc_x= 0
+    elif abs(avg_move_x)< 15 :
+        move_acc_x= avg_move_x * sign
+    elif abs(avg_move_x)< 30 :
+        move_acc_x= avg_move_x * sign *1.2
+    elif abs(avg_move_x)< 50 :
+        move_acc_x= avg_move_x * sign *1.5
     else:
-        move= 60
+        move_acc_x= 75
+
+    avg_x_old = avg_x
+    avg_y_old = avg_y
     #sign = 1 if avg > 0 else -1
     #diff = abs(avg) - THRESHOLD
     # 【移動量の可変処理】
@@ -92,7 +101,7 @@ def process_acc():
         # ゆっくり動かした時
     #    move = diff * 0.8 * sign
     # 素早く動かした時
-    return int(move_acc_x,move_acc_y)
+    return move_acc_x,move_acc_y
 def update_mode_led():
     if current_mode == MODE_MOUSE:
         led.plot(0, 0)
@@ -106,6 +115,8 @@ p0_now = False
 diff = 0
 THRESHOLD = 0
 avg = 0
+avg_x_old =0
+avg_y_old =0
 move_y2=0
 history: List[number] = []
 MODE_MOUSE = 0
@@ -123,8 +134,8 @@ mouse.start_mouse_service()
 
 def on_forever():
     global move_y2
-    move_x = process_acc(1) *-1
-    move_y = process_acc(0)
+    move_x = process_acc() *-1
+    move_y = process_acc()
 
     # キーボードモード時は待機（今回は何も動作させない）
     if current_mode == MODE_MOUSE:
