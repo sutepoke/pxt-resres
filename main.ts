@@ -26,50 +26,59 @@ function prosses_deg(x: number, y: number, z: number): number[] {
     return [pitch_deg, rool_deg]
 }
 
-function process_acc(xy: number): number {
-    let i: number;
-    let move: number;
+function process_acc(): number[] {
+    let move_acc_x: number;
+    let move_acc_y: number;
     
     //  ピッチ = \mathrm{atan2}(y, \sqrt{x^2 + z^2})
     //  ロール = \mathrm{atan2}(-x, z)
     let history_x = [0, 0, 0, 0]
     let history_y = [0, 0, 0, 0]
-    if (xy == 0) {
-        i = 0
-        while (i < 3) {
-            history[i] = acc_x_history[i]
-            i += 1
-        }
-    } else if (xy == 1) {
-        i = 0
-        while (i < 3) {
-            history[i] = acc_y_history[i]
-            i += 1
-        }
-    } else if (xy == 2) {
-        i = 0
-        while (i < 3) {
-            history[i] = Math.trunc(acc_z_history[i] * 0.1)
-            i += 1
-        }
+    let i = 0
+    while (i < 3) {
+        history_x[i] = acc_x_history[i]
+        history_y[i] = acc_y_history[i]
     }
-    
+    i += 1
     //  4回分の移動平均を算出
-    avg = (history[0] + history[1] + history[2] + history[3]) / 4
+    let avg_x = (history_x[0] + history_x[1] + history_x[2] + history_x[3]) / 4
+    let avg_y = (history_y[0] + history_y[1] + history_y[2] + history_y[3]) / 4
     //  傾き（重力）による常時入力を防ぐための不感帯（デッドゾーン）処理
     //  平行移動の「一瞬の加速」だけを拾うため、閾値を設定
     // if avg == history[0]:
     //     return 0
-    THRESHOLD = 3
-    let THRESHOLD2 = 50
-    if (Math.abs(Math.abs(avg) - Math.abs(history[0])) < THRESHOLD) {
-        move = 0
-    } else if (Math.abs(Math.abs(avg) - Math.abs(history[0])) < THRESHOLD2) {
-        move = avg
+    // THRESHOLD = 3
+    // THRESHOLD2 = 50
+    let avg_move_x = avg_x_old - avg_x
+    let sign = avg_x > 0 ? 1 : -1
+    if (Math.abs(avg_move_x) < 3) {
+        move_acc_x = 0
+    } else if (Math.abs(avg_move_x) < 15) {
+        move_acc_x = avg_move_x * sign
+    } else if (Math.abs(avg_move_x) < 30) {
+        move_acc_x = avg_move_x * sign * 1.2
+    } else if (Math.abs(avg_move_x) < 50) {
+        move_acc_x = avg_move_x * sign * 1.5
     } else {
-        move = 60
+        move_acc_x = 75
     }
     
+    let avg_move_y = avg_y_old - avg_y
+    sign = avg_y > 0 ? 1 : -1
+    if (Math.abs(avg_move_y) < 3) {
+        move_acc_y = 0
+    } else if (Math.abs(avg_move_y) < 15) {
+        move_acc_y = avg_move_y * sign
+    } else if (Math.abs(avg_move_y) < 30) {
+        move_acc_y = avg_move_y * sign * 1.2
+    } else if (Math.abs(avg_move_y) < 50) {
+        move_acc_y = avg_move_y * sign * 1.5
+    } else {
+        move_acc_y = 75
+    }
+    
+    avg_x_old = avg_x
+    avg_y_old = avg_y
     // sign = 1 if avg > 0 else -1
     // diff = abs(avg) - THRESHOLD
     //  【移動量の可変処理】
@@ -80,7 +89,7 @@ function process_acc(xy: number): number {
     //  ゆっくり動かした時
     //     move = diff * 0.8 * sign
     //  素早く動かした時
-    return Math.trunc(move)
+    return [move_acc_x, move_acc_y]
 }
 
 function update_mode_led() {
@@ -100,6 +109,8 @@ let p0_now = false
 let diff = 0
 let THRESHOLD = 0
 let avg = 0
+let avg_x_old = 0
+let avg_y_old = 0
 let move_y2 = 0
 let history : number[] = []
 let MODE_MOUSE = 0
@@ -120,8 +131,9 @@ basic.forever(function on_forever() {
     let btn_a_prev2: boolean;
     let btn_b_prev2: boolean;
     
-    let move_x = process_acc(1) * -1
-    let move_y = process_acc(0)
+    let [move_ax, move_ay] = process_acc()
+    let move_x = move_ax
+    let move_y = move_ay
     //  キーボードモード時は待機（今回は何も動作させない）
     if (current_mode == MODE_MOUSE) {
         // move_z = process_acc(3)

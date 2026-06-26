@@ -88,6 +88,19 @@ def process_acc():
         move_acc_x= avg_move_x * sign *1.5
     else:
         move_acc_x= 75
+ 
+    avg_move_y= avg_y_old-avg_y
+    sign = 1 if avg_y > 0 else -1
+    if abs(avg_move_y)< 3 :
+        move_acc_y= 0
+    elif abs(avg_move_y)< 15 :
+        move_acc_y= avg_move_y * sign
+    elif abs(avg_move_y)< 30 :
+        move_acc_y= avg_move_y * sign *1.2
+    elif abs(avg_move_y)< 50 :
+        move_acc_y= avg_move_y * sign *1.5
+    else:
+        move_acc_y= 75
 
     avg_x_old = avg_x
     avg_y_old = avg_y
@@ -101,7 +114,7 @@ def process_acc():
         # ゆっくり動かした時
     #    move = diff * 0.8 * sign
     # 素早く動かした時
-    return move_acc_x,move_acc_y
+    return (move_acc_x,move_acc_y)
 def update_mode_led():
     if current_mode == MODE_MOUSE:
         led.plot(0, 0)
@@ -134,8 +147,10 @@ mouse.start_mouse_service()
 
 def on_forever():
     global move_y2
-    move_x = process_acc() *-1
-    move_y = process_acc()
+    
+    (move_ax,move_ay) = process_acc()
+    move_x = move_ax
+    move_y = move_ay
 
     # キーボードモード時は待機（今回は何も動作させない）
     if current_mode == MODE_MOUSE:
