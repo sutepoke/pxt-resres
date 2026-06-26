@@ -125,13 +125,13 @@ def update_mode_led():
 btn_b_now = False
 btn_a_now = False
 p0_now = False
-diff = 0
-THRESHOLD = 0
-avg = 0
+#diff = 0
+#THRESHOLD = 0
+#avg = 0
 avg_x_old =0
 avg_y_old =0
-move_y2=0
-history: List[number] = []
+move_y_old=0
+
 MODE_MOUSE = 0
 MODE_KEYBOARD = 1
 current_mode = MODE_MOUSE
@@ -146,7 +146,7 @@ mouse.start_mouse_service()
 # --- メインループ ---
 
 def on_forever():
-    global move_y2
+    global move_y_old
     
     (move_ax,move_ay) = process_acc()
     move_x = move_ax
@@ -164,8 +164,8 @@ def on_forever():
             # P0タッチ中は、前後の加速度(Y軸)をスクロールに変換
             if abs(move_y) > 0 :
                 #scroll_val = 1 if move_y > 0 else -1
-                scroll_val=(move_y2-move_y)*0.1
-                move_y2 = move_y
+                scroll_val=(move_y_old-move_y)*0.1
+                move_y_old = move_y
                 move_y = 0
         # スクロール中はカーソル上下移動を相殺
         # 3. ボタン状態の変化チェック

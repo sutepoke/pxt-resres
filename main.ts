@@ -106,13 +106,12 @@ function update_mode_led() {
 let btn_b_now = false
 let btn_a_now = false
 let p0_now = false
-let diff = 0
-let THRESHOLD = 0
-let avg = 0
+// diff = 0
+// THRESHOLD = 0
+// avg = 0
 let avg_x_old = 0
 let avg_y_old = 0
-let move_y2 = 0
-let history : number[] = []
+let move_y_old = 0
 let MODE_MOUSE = 0
 let MODE_KEYBOARD = 1
 let current_mode = MODE_MOUSE
@@ -145,8 +144,8 @@ basic.forever(function on_forever() {
             //  P0タッチ中は、前後の加速度(Y軸)をスクロールに変換
             if (Math.abs(move_y) > 0) {
                 // scroll_val = 1 if move_y > 0 else -1
-                scroll_val = (move_y2 - move_y) * 0.1
-                move_y2 = move_y
+                scroll_val = (move_y_old - move_y) * 0.1
+                move_y_old = move_y
                 move_y = 0
             }
             
