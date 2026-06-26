@@ -146,7 +146,7 @@ mouse.start_mouse_service()
 # --- メインループ ---
 
 def on_forever():
-    global move_y_old
+    global move_y_old, current_mode
     
     (move_ax,move_ay) = process_acc()
     move_x = move_ax
@@ -196,7 +196,7 @@ def on_forever():
 basic.forever(on_forever)
 
 def on_in_background():
-    global btn_a_now, btn_b_now, p0_now
+    global btn_a_now, btn_b_now, p0_now, acc_x_history, acc_y_history
     while True:
         # ボタンとエッジコネクタ(P0)の「タッチされているか」の状態を取得
         btn_a_now = input.button_is_pressed(Button.A)
