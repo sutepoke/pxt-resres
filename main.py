@@ -73,36 +73,33 @@ def process_acc():
     avg_x = (history_x[0] + history_x[1] + history_x[2] + history_x[3]) / 4
     avg_y = (history_y[0] + history_y[1] + history_y[2] + history_y[3]) / 4
     # 傾き（重力）による常時入力を防ぐための不感帯（デッドゾーン）処理
-    # 平行移動の「一瞬の加速」だけを拾うため、閾値を設定
-    #if avg == history[0]:
-    #    return 0
-    #THRESHOLD = 3
-    #THRESHOLD2 = 50
-    avg_move_x= avg_x_old-avg_x
-    sign = 1 if avg_x > 0 else -1
-    if abs(avg_move_x)< 3 :
-        move_acc_x= 0
-    elif abs(avg_move_x)< 15 :
-        move_acc_x= avg_move_x * sign
-    elif abs(avg_move_x)< 30 :
-        move_acc_x= avg_move_x * sign *1.2
-    elif abs(avg_move_x)< 50 :
-        move_acc_x= avg_move_x * sign *1.5
-    else:
-        move_acc_x= 75
- 
-    avg_move_y= avg_y_old-avg_y
-    sign = 1 if avg_y > 0 else -1
-    if abs(avg_move_y)< 3 :
-        move_acc_y= 0
-    elif abs(avg_move_y)< 15 :
-        move_acc_y= avg_move_y * sign
-    elif abs(avg_move_y)< 30 :
-        move_acc_y= avg_move_y * sign *1.2
-    elif abs(avg_move_y)< 50 :
-        move_acc_y= avg_move_y * sign *1.5
-    else:
-        move_acc_y= 75
+    
+    #avg_move_x= avg_x_old-avg_x
+    #sign = 1 if avg_x > 0 else -1
+    #if abs(avg_move_x)< 3 :
+    #    move_acc_x= 0
+    #elif abs(avg_move_x)< 15 :
+    #    move_acc_x= avg_x 
+    #elif abs(avg_move_x)< 30 :
+    #    move_acc_x= avg_x * 1.2
+    #elif abs(avg_move_x)< 50 :
+    #    move_acc_x= avg_x * 1.5
+    #else:
+    #    move_acc_x= 75
+    move_acc_x= avg_x
+    #avg_move_y= avg_y_old-avg_y
+    #sign = 1 if avg_y > 0 else -1
+    #if abs(avg_move_y)< 3 :
+    #    move_acc_y= 0
+    #elif abs(avg_move_y)< 15 :
+    #    move_acc_y= avg_y 
+    #elif abs(avg_move_y)< 30 :
+    #    move_acc_y= avg_y *1.2
+    #elif abs(avg_move_y)< 50 :
+    #    move_acc_y= avg_y *1.5
+    #else:
+    #    move_acc_y= 75
+    move_acc_y= avg_y
 
     avg_x_old = avg_x
     avg_y_old = avg_y
@@ -158,8 +155,8 @@ mouse.start_mouse_service()
 def on_forever():
     global move_y_old   
     move_ax,move_ay = process_acc()
-    move_x = move_ax
-    move_y = move_ay
+    move_x = move_ay*-1
+    move_y = move_ax
 
     update_mode_led()
 
