@@ -169,8 +169,8 @@ def on_forever():
 
         # 2. スクロール処理 (P0タッチ時)
         scroll_val = 0
-        #if p0_now:
-        if scroll_val == 0:
+        if p0_now:
+        #if scroll_val == 0:
 
             # P0タッチ中は、前後の加速度(Y軸)をスクロールに変換
             #if abs(move_y) > 0 :

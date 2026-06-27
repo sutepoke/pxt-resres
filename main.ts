@@ -146,8 +146,8 @@ basic.forever(function on_forever() {
         // move_y = input.rotation(Rotation.PITCH)
         //  2. スクロール処理 (P0タッチ時)
         scroll_val = 0
-        // if p0_now:
-        if (scroll_val == 0) {
+        if (p0_now) {
+            // if scroll_val == 0:
             //  P0タッチ中は、前後の加速度(Y軸)をスクロールに変換
             // if abs(move_y) > 0 :
             move_reng = Math.abs(move_y_old - move_y)
