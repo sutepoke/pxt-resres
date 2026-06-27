@@ -76,16 +76,16 @@ def process_acc():
     
     #avg_move_x= avg_x_old-avg_x
     #sign = 1 if avg_x > 0 else -1
-    if abs(avg_x)< 2 :
+    if abs(avg_x)< 3 :
         move_acc_x= 0
     elif abs(avg_x)< 6 :
         move_acc_x= avg_x 
     elif abs(avg_x)< 15 :
-        move_acc_x= avg_x * 1.2
-    elif abs(avg_x)< 45 :
         move_acc_x= avg_x * 1.5
+    elif abs(avg_x)< 45 :
+        move_acc_x= avg_x * 2
     else:
-        move_acc_x= 70
+        move_acc_x= 90
     #    move_acc_x= avg_x
     #avg_move_y= avg_y_old-avg_y
     #sign = 1 if avg_y > 0 else -1
@@ -94,11 +94,11 @@ def process_acc():
     elif abs(avg_y)< 6 :
         move_acc_y= avg_y 
     elif abs(avg_y)< 15 :
-        move_acc_y= avg_y *1.2
-    elif abs(avg_y)< 45 :
         move_acc_y= avg_y *1.5
+    elif abs(avg_y)< 45 :
+        move_acc_y= avg_y *2
     else:
-        move_acc_y= 70
+        move_acc_y= 90
     #move_acc_y= avg_y
 
     avg_x_old = avg_x
@@ -124,9 +124,9 @@ def update_mode_led():
         led.unplot(4, 0)
     
     if p0_now== True:
-        led.plot(0,4)
+        led.plot(0,0)
     elif p0_now== False:
-        led.unplot(0,4)
+        led.unplot(0,0)
 
 btn_b_now = False
 btn_a_now = False
@@ -157,7 +157,7 @@ def on_forever():
     move_ax,move_ay = process_acc()
     #横向き（ロゴが右）
     move_x = move_ay*-1
-    move_y = move_ax
+    move_y = move_ax*-1
 
     update_mode_led()
 
@@ -177,11 +177,11 @@ def on_forever():
             move_reng= abs(move_y_old-move_y)
             if move_reng > 0 :
                 #scroll_val = 1 if move_y > 0 else -1
-                if move_reng < 3:
+                if move_reng < 2:
                     scroll_val=0
                 elif move_reng < 6:
                     scroll_val = 1 if move_y > 0 else -1
-                elif move_reng < 15:
+                elif move_reng < 18:
                     scroll_val = 2 if move_y > 0 else -2
                 elif move_reng < 45:
                     scroll_val = 3 if move_y > 0 else -3

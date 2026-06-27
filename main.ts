@@ -45,16 +45,16 @@ function process_acc(): number[] {
     //  傾き（重力）による常時入力を防ぐための不感帯（デッドゾーン）処理
     // avg_move_x= avg_x_old-avg_x
     // sign = 1 if avg_x > 0 else -1
-    if (Math.abs(avg_x) < 2) {
+    if (Math.abs(avg_x) < 3) {
         move_acc_x = 0
     } else if (Math.abs(avg_x) < 6) {
         move_acc_x = avg_x
     } else if (Math.abs(avg_x) < 15) {
-        move_acc_x = avg_x * 1.2
-    } else if (Math.abs(avg_x) < 45) {
         move_acc_x = avg_x * 1.5
+    } else if (Math.abs(avg_x) < 45) {
+        move_acc_x = avg_x * 2
     } else {
-        move_acc_x = 70
+        move_acc_x = 90
     }
     
     //     move_acc_x= avg_x
@@ -65,11 +65,11 @@ function process_acc(): number[] {
     } else if (Math.abs(avg_y) < 6) {
         move_acc_y = avg_y
     } else if (Math.abs(avg_y) < 15) {
-        move_acc_y = avg_y * 1.2
-    } else if (Math.abs(avg_y) < 45) {
         move_acc_y = avg_y * 1.5
+    } else if (Math.abs(avg_y) < 45) {
+        move_acc_y = avg_y * 2
     } else {
-        move_acc_y = 70
+        move_acc_y = 90
     }
     
     // move_acc_y= avg_y
@@ -98,9 +98,9 @@ function update_mode_led() {
     }
     
     if (p0_now == true) {
-        led.plot(0, 4)
+        led.plot(0, 0)
     } else if (p0_now == false) {
-        led.unplot(0, 4)
+        led.unplot(0, 0)
     }
     
 }
@@ -137,7 +137,7 @@ basic.forever(function on_forever() {
     let [move_ax, move_ay] = process_acc()
     // 横向き（ロゴが右）
     let move_x = move_ay * -1
-    let move_y = move_ax
+    let move_y = move_ax * -1
     update_mode_led()
     //  キーボードモード時は待機（今回は何も動作させない）
     if (current_mode == MODE_MOUSE) {
@@ -153,11 +153,11 @@ basic.forever(function on_forever() {
             move_reng = Math.abs(move_y_old - move_y)
             if (move_reng > 0) {
                 // scroll_val = 1 if move_y > 0 else -1
-                if (move_reng < 3) {
+                if (move_reng < 2) {
                     scroll_val = 0
                 } else if (move_reng < 6) {
                     scroll_val = move_y > 0 ? 1 : -1
-                } else if (move_reng < 15) {
+                } else if (move_reng < 18) {
                     scroll_val = move_y > 0 ? 2 : -2
                 } else if (move_reng < 45) {
                     scroll_val = move_y > 0 ? 3 : -3
