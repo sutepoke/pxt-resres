@@ -76,30 +76,30 @@ def process_acc():
     
     #avg_move_x= avg_x_old-avg_x
     #sign = 1 if avg_x > 0 else -1
-    #if abs(avg_move_x)< 3 :
-    #    move_acc_x= 0
-    #elif abs(avg_move_x)< 15 :
-    #    move_acc_x= avg_x 
-    #elif abs(avg_move_x)< 30 :
-    #    move_acc_x= avg_x * 1.2
-    #elif abs(avg_move_x)< 50 :
-    #    move_acc_x= avg_x * 1.5
-    #else:
-    #    move_acc_x= 75
-    move_acc_x= avg_x
+    if abs(avg_x)< 2 :
+        move_acc_x= 0
+    elif abs(avg_x)< 6 :
+        move_acc_x= avg_x 
+    elif abs(avg_x)< 15 :
+        move_acc_x= avg_x * 1.2
+    elif abs(avg_x)< 45 :
+        move_acc_x= avg_x * 1.5
+    else:
+        move_acc_x= 70
+    #    move_acc_x= avg_x
     #avg_move_y= avg_y_old-avg_y
     #sign = 1 if avg_y > 0 else -1
-    #if abs(avg_move_y)< 3 :
-    #    move_acc_y= 0
-    #elif abs(avg_move_y)< 15 :
-    #    move_acc_y= avg_y 
-    #elif abs(avg_move_y)< 30 :
-    #    move_acc_y= avg_y *1.2
-    #elif abs(avg_move_y)< 50 :
-    #    move_acc_y= avg_y *1.5
-    #else:
-    #    move_acc_y= 75
-    move_acc_y= avg_y
+    if abs(avg_y)< 3 :
+        move_acc_y= 0
+    elif abs(avg_y)< 6 :
+        move_acc_y= avg_y 
+    elif abs(avg_y)< 15 :
+        move_acc_y= avg_y *1.2
+    elif abs(avg_y)< 45 :
+        move_acc_y= avg_y *1.5
+    else:
+        move_acc_y= 70
+    #move_acc_y= avg_y
 
     avg_x_old = avg_x
     avg_y_old = avg_y
@@ -170,9 +170,10 @@ def on_forever():
         scroll_val = 0
         if p0_now:
             # P0タッチ中は、前後の加速度(Y軸)をスクロールに変換
-            if abs(move_y) > 0 :
-                #scroll_val = 1 if move_y > 0 else -1
-                scroll_val=(move_y_old-move_y)*0.1
+            #if abs(move_y) > 0 :
+            if abs(move_y_old-move_y) > 0 :
+                scroll_val = 1 if move_y > 0 else -1
+                #scroll_val=(move_y_old-move_y)
                 move_y_old = move_y
                 move_y = 0
         # スクロール中はカーソル上下移動を相殺

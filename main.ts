@@ -27,6 +27,8 @@ function prosses_deg(x: number, y: number, z: number): number[] {
 }
 
 function process_acc(): number[] {
+    let move_acc_x: number;
+    let move_acc_y: number;
     
     //  ピッチ = \mathrm{atan2}(y, \sqrt{x^2 + z^2})
     //  ロール = \mathrm{atan2}(-x, z)
@@ -43,30 +45,34 @@ function process_acc(): number[] {
     //  傾き（重力）による常時入力を防ぐための不感帯（デッドゾーン）処理
     // avg_move_x= avg_x_old-avg_x
     // sign = 1 if avg_x > 0 else -1
-    // if abs(avg_move_x)< 3 :
-    //     move_acc_x= 0
-    // elif abs(avg_move_x)< 15 :
-    //     move_acc_x= avg_x 
-    // elif abs(avg_move_x)< 30 :
-    //     move_acc_x= avg_x * 1.2
-    // elif abs(avg_move_x)< 50 :
-    //     move_acc_x= avg_x * 1.5
-    // else:
-    //     move_acc_x= 75
-    let move_acc_x = avg_x
+    if (Math.abs(avg_x) < 2) {
+        move_acc_x = 0
+    } else if (Math.abs(avg_x) < 6) {
+        move_acc_x = avg_x
+    } else if (Math.abs(avg_x) < 15) {
+        move_acc_x = avg_x * 1.2
+    } else if (Math.abs(avg_x) < 45) {
+        move_acc_x = avg_x * 1.5
+    } else {
+        move_acc_x = 70
+    }
+    
+    //     move_acc_x= avg_x
     // avg_move_y= avg_y_old-avg_y
     // sign = 1 if avg_y > 0 else -1
-    // if abs(avg_move_y)< 3 :
-    //     move_acc_y= 0
-    // elif abs(avg_move_y)< 15 :
-    //     move_acc_y= avg_y 
-    // elif abs(avg_move_y)< 30 :
-    //     move_acc_y= avg_y *1.2
-    // elif abs(avg_move_y)< 50 :
-    //     move_acc_y= avg_y *1.5
-    // else:
-    //     move_acc_y= 75
-    let move_acc_y = avg_y
+    if (Math.abs(avg_y) < 3) {
+        move_acc_y = 0
+    } else if (Math.abs(avg_y) < 6) {
+        move_acc_y = avg_y
+    } else if (Math.abs(avg_y) < 15) {
+        move_acc_y = avg_y * 1.2
+    } else if (Math.abs(avg_y) < 45) {
+        move_acc_y = avg_y * 1.5
+    } else {
+        move_acc_y = 70
+    }
+    
+    // move_acc_y= avg_y
     avg_x_old = avg_x
     avg_y_old = avg_y
     // sign = 1 if avg > 0 else -1
@@ -140,9 +146,10 @@ basic.forever(function on_forever() {
         scroll_val = 0
         if (p0_now) {
             //  P0タッチ中は、前後の加速度(Y軸)をスクロールに変換
-            if (Math.abs(move_y) > 0) {
-                // scroll_val = 1 if move_y > 0 else -1
-                scroll_val = (move_y_old - move_y) * 0.1
+            // if abs(move_y) > 0 :
+            if (Math.abs(move_y_old - move_y) > 0) {
+                scroll_val = move_y > 0 ? 1 : -1
+                // scroll_val=(move_y_old-move_y)
                 move_y_old = move_y
                 move_y = 0
             }
