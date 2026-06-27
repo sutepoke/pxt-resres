@@ -36,7 +36,7 @@
 # ロゴタッチでモード切替（押して離した時などに反応）
 
 def on_logo_touched():
-    global current_mode
+    global current_mode,MODE_MOUSE ,MODE_KEYBOARD
     if current_mode == MODE_MOUSE:
         current_mode = MODE_KEYBOARD
     else:
