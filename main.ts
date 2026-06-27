@@ -32,8 +32,8 @@ function process_acc(): number[] {
     
     //  ピッチ = \mathrm{atan2}(y, \sqrt{x^2 + z^2})
     //  ロール = \mathrm{atan2}(-x, z)
-    let history_x = [1, 0, 0, 0]
-    let history_y = [1, 0, 0, 0]
+    let history_x = [0, 0, 0, 0]
+    let history_y = [0, 0, 0, 0]
     let i = 0
     for (i = 0; i < 3; i++) {
         history_x[i] = acc_x_history[i]

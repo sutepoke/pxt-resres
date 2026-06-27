@@ -61,8 +61,8 @@ def process_acc():
     global avg_x_old ,avg_y_old
     # ピッチ = \mathrm{atan2}(y, \sqrt{x^2 + z^2})
     # ロール = \mathrm{atan2}(-x, z)
-    history_x = [1, 0, 0, 0]
-    history_y = [1, 0, 0, 0]
+    history_x = [0, 0, 0, 0]
+    history_y = [0, 0, 0, 0]
     
     i = 0
     for i in range(3):
