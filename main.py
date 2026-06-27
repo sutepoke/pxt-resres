@@ -36,12 +36,12 @@
 # ロゴタッチでモード切替（押して離した時などに反応）
 
 def on_logo_touched():
-    global current_mode,MODE_MOUSE ,MODE_KEYBOARD
+    global current_mode
     if current_mode == MODE_MOUSE:
         current_mode = MODE_KEYBOARD
-    else:
+    elif current_mode == MODE_KEYBOARD:
         current_mode = MODE_MOUSE
-    update_mode_led()
+    #update_mode_led()
 input.on_logo_event(TouchButtonEvent.TOUCHED, on_logo_touched)
 
 def prosses_deg(x,y,z):
@@ -58,11 +58,10 @@ def process_acc():
     global avg_x_old ,avg_y_old
     # ピッチ = \mathrm{atan2}(y, \sqrt{x^2 + z^2})
     # ロール = \mathrm{atan2}(-x, z)
-    history_x = [0, 0, 0, 0]
-    history_y = [0, 0, 0, 0]
+    history_x = [1, 0, 0, 0]
+    history_y = [1, 0, 0, 0]
     
     i = 0
-
     for i in range(3):
         history_x[i] = acc_x_history[i] 
         history_y[i] = acc_y_history[i] 
@@ -116,16 +115,17 @@ def process_acc():
     # 素早く動かした時
     return (move_acc_x,move_acc_y)
 def update_mode_led():
-    global current_mode, MODE_MOUSE,MODE_KEYBOARD
+    
     if current_mode == MODE_MOUSE:
         led.plot(4, 0)
         led.unplot(4, 4)
-    elif current_mode ==MODE_KEYBOARD:
+    elif current_mode == MODE_KEYBOARD:
         led.plot(4, 4)
         led.unplot(4, 0)
 btn_b_now = False
 btn_a_now = False
 p0_now = False
+logo_now = False
 #diff = 0
 #THRESHOLD = 0
 #avg = 0
@@ -138,7 +138,7 @@ MODE_KEYBOARD = 1
 current_mode = MODE_MOUSE
 acc_x_history = [0, 0, 0, 0]
 acc_y_history = [0, 0, 0, 0]
-acc_z_history = [-1023, -1023, -1023, -1023]
+#acc_z_history = [-1023, -1023, -1023, -1023]
 # 初期設定
 #update_mode_led()
 #serial.redirect_to_usb()
@@ -198,12 +198,13 @@ def on_forever():
 basic.forever(on_forever)
 
 def on_in_background():
-    global btn_a_now, btn_b_now, p0_now, acc_x_history, acc_y_history
+    global btn_a_now, btn_b_now, p0_now, logo_now, acc_x_history, acc_y_history
     while True:
         # ボタンとエッジコネクタ(P0)の「タッチされているか」の状態を取得
         btn_a_now = input.button_is_pressed(Button.A)
         btn_b_now = input.button_is_pressed(Button.B)
         p0_now = input.pin_is_pressed(TouchPin.P0)
+        logo_now = input.logo_is_pressed()
         # 加速度センサーの値を取得 (-2046 〜 2046)
         # ※表面を正面（ロゴが右、Aボタンが手前）にした場合、
         # 必要に応じてxとyの軸や符号を調整してください。

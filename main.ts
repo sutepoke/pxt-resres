@@ -6,15 +6,15 @@
 /** ボタンとタッチの現在の状態 (True: 押されている / False: 離されている) */
 /** --- 定数とグローバル変数 --- */
 //  ロゴタッチでモード切替（押して離した時などに反応）
+// update_mode_led()
 input.onLogoEvent(TouchButtonEvent.Touched, function on_logo_touched() {
     
     if (current_mode == MODE_MOUSE) {
         current_mode = MODE_KEYBOARD
-    } else {
+    } else if (current_mode == MODE_KEYBOARD) {
         current_mode = MODE_MOUSE
     }
     
-    update_mode_led()
 })
 function prosses_deg(x: number, y: number, z: number): number[] {
     //  ピッチ
@@ -32,8 +32,8 @@ function process_acc(): number[] {
     
     //  ピッチ = \mathrm{atan2}(y, \sqrt{x^2 + z^2})
     //  ロール = \mathrm{atan2}(-x, z)
-    let history_x = [0, 0, 0, 0]
-    let history_y = [0, 0, 0, 0]
+    let history_x = [1, 0, 0, 0]
+    let history_y = [1, 0, 0, 0]
     let i = 0
     for (i = 0; i < 3; i++) {
         history_x[i] = acc_x_history[i]
@@ -92,7 +92,6 @@ function process_acc(): number[] {
 }
 
 function update_mode_led() {
-    
     if (current_mode == MODE_MOUSE) {
         led.plot(4, 0)
         led.unplot(4, 4)
@@ -106,6 +105,7 @@ function update_mode_led() {
 let btn_b_now = false
 let btn_a_now = false
 let p0_now = false
+let logo_now = false
 // diff = 0
 // THRESHOLD = 0
 // avg = 0
@@ -117,7 +117,7 @@ let MODE_KEYBOARD = 1
 let current_mode = MODE_MOUSE
 let acc_x_history = [0, 0, 0, 0]
 let acc_y_history = [0, 0, 0, 0]
-let acc_z_history = [-1023, -1023, -1023, -1023]
+// acc_z_history = [-1023, -1023, -1023, -1023]
 //  初期設定
 // update_mode_led()
 // serial.redirect_to_usb()
@@ -183,6 +183,7 @@ control.inBackground(function on_in_background() {
         btn_a_now = input.buttonIsPressed(Button.A)
         btn_b_now = input.buttonIsPressed(Button.B)
         p0_now = input.pinIsPressed(TouchPin.P0)
+        logo_now = input.logoIsPressed()
         //  加速度センサーの値を取得 (-2046 〜 2046)
         //  ※表面を正面（ロゴが右、Aボタンが手前）にした場合、
         //  必要に応じてxとyの軸や符号を調整してください。
