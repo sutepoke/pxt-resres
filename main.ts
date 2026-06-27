@@ -153,11 +153,11 @@ basic.forever(function on_forever() {
             move_reng = Math.abs(move_y_old - move_y)
             if (move_reng > 0) {
                 // scroll_val = 1 if move_y > 0 else -1
-                if (move_reng < 2) {
+                if (move_reng < 3) {
                     scroll_val = 0
-                } else if (move_reng < 6) {
+                } else if (move_reng < 9) {
                     scroll_val = move_y > 0 ? 1 : -1
-                } else if (move_reng < 18) {
+                } else if (move_reng < 20) {
                     scroll_val = move_y > 0 ? 2 : -2
                 } else if (move_reng < 45) {
                     scroll_val = move_y > 0 ? 3 : -3

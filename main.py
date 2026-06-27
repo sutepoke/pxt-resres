@@ -177,11 +177,11 @@ def on_forever():
             move_reng= abs(move_y_old-move_y)
             if move_reng > 0 :
                 #scroll_val = 1 if move_y > 0 else -1
-                if move_reng < 2:
+                if move_reng < 3:
                     scroll_val=0
-                elif move_reng < 6:
+                elif move_reng < 9:
                     scroll_val = 1 if move_y > 0 else -1
-                elif move_reng < 18:
+                elif move_reng < 20:
                     scroll_val = 2 if move_y > 0 else -2
                 elif move_reng < 45:
                     scroll_val = 3 if move_y > 0 else -3
