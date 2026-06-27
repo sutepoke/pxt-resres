@@ -116,6 +116,7 @@ def process_acc():
     # 素早く動かした時
     return (move_acc_x,move_acc_y)
 def update_mode_led():
+    global current_mode, MODE_MOUSE,MODE_KEYBOARD
     if current_mode == MODE_MOUSE:
         led.plot(0, 0)
         led.unplot(0, 4)
@@ -146,8 +147,7 @@ mouse.start_mouse_service()
 # --- メインループ ---
 
 def on_forever():
-    global move_y_old, current_mode
-    
+    global move_y_old, current_mode,MODE_MOUSE,MODE_KEYBOARD    
     (move_ax,move_ay) = process_acc()
     move_x = move_ax
     move_y = move_ay
