@@ -35,11 +35,10 @@ function process_acc(): number[] {
     let history_x = [0, 0, 0, 0]
     let history_y = [0, 0, 0, 0]
     let i = 0
-    while (i < 3) {
+    for (i = 0; i < 3; i++) {
         history_x[i] = acc_x_history[i]
         history_y[i] = acc_y_history[i]
     }
-    i += 1
     //  4回分の移動平均を算出
     let avg_x = (history_x[0] + history_x[1] + history_x[2] + history_x[3]) / 4
     let avg_y = (history_y[0] + history_y[1] + history_y[2] + history_y[3]) / 4
@@ -120,7 +119,7 @@ let acc_x_history = [0, 0, 0, 0]
 let acc_y_history = [0, 0, 0, 0]
 let acc_z_history = [-1023, -1023, -1023, -1023]
 //  初期設定
-update_mode_led()
+// update_mode_led()
 // serial.redirect_to_usb()
 //  必要に応じて、ここでBluetoothマウスサービスの開始処理を呼び出します
 mouse.startMouseService()
@@ -134,6 +133,7 @@ basic.forever(function on_forever() {
     let [move_ax, move_ay] = process_acc()
     let move_x = move_ax
     let move_y = move_ay
+    update_mode_led()
     //  キーボードモード時は待機（今回は何も動作させない）
     if (current_mode == MODE_MOUSE) {
         // move_z = process_acc(3)

@@ -55,17 +55,17 @@ def prosses_deg(x,y,z):
     return (pitch_deg,rool_deg)
 
 def process_acc():
-    global acc_x_history,acc_y_history,avg_x_old ,avg_y_old
+    global avg_x_old ,avg_y_old
     # ピッチ = \mathrm{atan2}(y, \sqrt{x^2 + z^2})
     # ロール = \mathrm{atan2}(-x, z)
     history_x = [0, 0, 0, 0]
     history_y = [0, 0, 0, 0]
     
     i = 0
-    while i < 3:
+
+    for i in range(3):
         history_x[i] = acc_x_history[i] 
         history_y[i] = acc_y_history[i] 
-    i += 1
     
     # 4回分の移動平均を算出
     avg_x = (history_x[0] + history_x[1] + history_x[2] + history_x[3]) / 4
@@ -140,17 +140,19 @@ acc_x_history = [0, 0, 0, 0]
 acc_y_history = [0, 0, 0, 0]
 acc_z_history = [-1023, -1023, -1023, -1023]
 # 初期設定
-update_mode_led()
+#update_mode_led()
 #serial.redirect_to_usb()
 # 必要に応じて、ここでBluetoothマウスサービスの開始処理を呼び出します
 mouse.start_mouse_service()
 # --- メインループ ---
 
 def on_forever():
-    global move_y_old, current_mode,MODE_MOUSE,MODE_KEYBOARD    
+    global move_y_old   
     move_ax,move_ay = process_acc()
     move_x = move_ax
     move_y = move_ay
+
+    update_mode_led()
 
     # キーボードモード時は待機（今回は何も動作させない）
     if current_mode == MODE_MOUSE:
