@@ -95,11 +95,11 @@ function process_acc(): number[] {
 function update_mode_led() {
     
     if (current_mode == MODE_MOUSE) {
-        led.plot(0, 0)
-        led.unplot(0, 4)
-    } else {
-        led.plot(0, 4)
-        led.unplot(0, 0)
+        led.plot(4, 0)
+        led.unplot(4, 4)
+    } else if (current_mode == MODE_KEYBOARD) {
+        led.plot(4, 4)
+        led.unplot(4, 0)
     }
     
 }

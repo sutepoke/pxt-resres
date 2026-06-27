@@ -118,11 +118,11 @@ def process_acc():
 def update_mode_led():
     global current_mode, MODE_MOUSE,MODE_KEYBOARD
     if current_mode == MODE_MOUSE:
-        led.plot(0, 0)
-        led.unplot(0, 4)
-    else:
-        led.plot(0, 4)
-        led.unplot(0, 0)
+        led.plot(4, 0)
+        led.unplot(4, 4)
+    elif current_mode ==MODE_KEYBOARD:
+        led.plot(4, 4)
+        led.unplot(4, 0)
 btn_b_now = False
 btn_a_now = False
 p0_now = False
@@ -148,7 +148,7 @@ mouse.start_mouse_service()
 
 def on_forever():
     global move_y_old, current_mode,MODE_MOUSE,MODE_KEYBOARD    
-    (move_ax,move_ay) = process_acc()
+    move_ax,move_ay = process_acc()
     move_x = move_ax
     move_y = move_ay
 
