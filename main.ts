@@ -100,6 +100,12 @@ function update_mode_led() {
         led.unplot(4, 0)
     }
     
+    if (p0_now == true) {
+        led.plot(0, 4)
+    } else if (p0_now == false) {
+        led.unplot(0, 4)
+    }
+    
 }
 
 let btn_b_now = false

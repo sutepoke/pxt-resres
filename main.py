@@ -122,6 +122,12 @@ def update_mode_led():
     elif current_mode == MODE_KEYBOARD:
         led.plot(4, 4)
         led.unplot(4, 0)
+    
+    if p0_now== True:
+        led.plot(0,4)
+    elif p0_now== False:
+        led.unplot(0,4)
+
 btn_b_now = False
 btn_a_now = False
 p0_now = False
