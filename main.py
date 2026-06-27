@@ -1,3 +1,6 @@
+
+
+
 """
 
 --- 初期設定 ---
@@ -147,7 +150,7 @@ acc_y_history = [0, 0, 0, 0]
 #acc_z_history = [-1023, -1023, -1023, -1023]
 # 初期設定
 #update_mode_led()
-#serial.redirect_to_usb()
+serial.redirect_to_usb()
 # 必要に応じて、ここでBluetoothマウスサービスの開始処理を呼び出します
 mouse.start_mouse_service()
 # --- メインループ ---
