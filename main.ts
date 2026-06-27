@@ -129,11 +129,13 @@ mouse.startMouseService()
 //  --- メインループ ---
 basic.forever(function on_forever() {
     let scroll_val: number;
+    let move_reng: number;
     let is_changed: any;
     let btn_a_prev2: boolean;
     let btn_b_prev2: boolean;
     
     let [move_ax, move_ay] = process_acc()
+    // 横向き（ロゴが右）
     let move_x = move_ay * -1
     let move_y = move_ax
     update_mode_led()
@@ -144,12 +146,25 @@ basic.forever(function on_forever() {
         // move_y = input.rotation(Rotation.PITCH)
         //  2. スクロール処理 (P0タッチ時)
         scroll_val = 0
-        if (p0_now) {
+        // if p0_now:
+        if (scroll_val == 0) {
             //  P0タッチ中は、前後の加速度(Y軸)をスクロールに変換
             // if abs(move_y) > 0 :
-            if (Math.abs(move_y_old - move_y) > 0) {
-                scroll_val = move_y > 0 ? 1 : -1
-                // scroll_val=(move_y_old-move_y)
+            move_reng = Math.abs(move_y_old - move_y)
+            if (move_reng > 0) {
+                // scroll_val = 1 if move_y > 0 else -1
+                if (move_reng < 3) {
+                    scroll_val = 0
+                } else if (move_reng < 6) {
+                    scroll_val = move_y > 0 ? 1 : -1
+                } else if (move_reng < 15) {
+                    scroll_val = move_y > 0 ? 2 : -2
+                } else if (move_reng < 45) {
+                    scroll_val = move_y > 0 ? 3 : -3
+                } else {
+                    scroll_val = move_y > 0 ? 5 : -5
+                }
+                
                 move_y_old = move_y
                 move_y = 0
             }
@@ -176,7 +191,7 @@ basic.forever(function on_forever() {
     // (pitch,rool)=prosses_deg(move_x,move_y,move_z)
     serial.writeValue("x     ", move_x)
     serial.writeValue("y     ", move_y)
-    // serial.write_value("y     ",rool )
+    serial.writeValue("scroll", scroll_val)
     // serial.write_value("y ", raw_y)
     basic.pause(20)
 })

@@ -155,6 +155,7 @@ mouse.start_mouse_service()
 def on_forever():
     global move_y_old   
     move_ax,move_ay = process_acc()
+    #横向き（ロゴが右）
     move_x = move_ay*-1
     move_y = move_ax
 
@@ -168,12 +169,25 @@ def on_forever():
 
         # 2. スクロール処理 (P0タッチ時)
         scroll_val = 0
-        if p0_now:
+        #if p0_now:
+        if scroll_val == 0:
+
             # P0タッチ中は、前後の加速度(Y軸)をスクロールに変換
             #if abs(move_y) > 0 :
-            if abs(move_y_old-move_y) > 0 :
-                scroll_val = 1 if move_y > 0 else -1
-                #scroll_val=(move_y_old-move_y)
+            move_reng= abs(move_y_old-move_y)
+            if move_reng > 0 :
+                #scroll_val = 1 if move_y > 0 else -1
+                if move_reng < 3:
+                    scroll_val=0
+                elif move_reng < 6:
+                    scroll_val = 1 if move_y > 0 else -1
+                elif move_reng < 15:
+                    scroll_val = 2 if move_y > 0 else -2
+                elif move_reng < 45:
+                    scroll_val = 3 if move_y > 0 else -3
+                else:
+                    scroll_val = 5 if move_y > 0 else -5
+
                 move_y_old = move_y
                 move_y = 0
         # スクロール中はカーソル上下移動を相殺
@@ -198,7 +212,7 @@ def on_forever():
     #(pitch,rool)=prosses_deg(move_x,move_y,move_z)
     serial.write_value("x     ", move_x)
     serial.write_value("y     ", move_y)
-    #serial.write_value("y     ",rool )
+    serial.write_value("scroll", scroll_val)
     #serial.write_value("y ", raw_y)
 
     basic.pause(20)
