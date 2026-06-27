@@ -171,7 +171,10 @@ def on_forever():
         scroll_val = 0
         if p0_now:
         #if scroll_val == 0:
-
+            if move_y_old_flag == 0:
+                move_y_old = move_y 
+                move_y_old_flag = 1
+                
             # P0タッチ中は、前後の加速度(Y軸)をスクロールに変換
             #if abs(move_y) > 0 :
             move_reng= abs(move_y_old-move_y)
@@ -190,6 +193,8 @@ def on_forever():
 
                 move_y_old = move_y
                 move_y = 0
+        elif p0_now == False:
+            move_y_old_flag = 0
         # スクロール中はカーソル上下移動を相殺
         # 3. ボタン状態の変化チェック
         # 長押し(hold)に対応するため、状態が変わったとき、またはボタンが押され続けている時に送信

@@ -129,6 +129,7 @@ mouse.startMouseService()
 //  --- メインループ ---
 basic.forever(function on_forever() {
     let scroll_val: number;
+    let move_y_old_flag: number;
     let move_reng: number;
     let is_changed: any;
     let btn_a_prev2: boolean;
@@ -148,6 +149,11 @@ basic.forever(function on_forever() {
         scroll_val = 0
         if (p0_now) {
             // if scroll_val == 0:
+            if (move_y_old_flag == 0) {
+                move_y_old = move_y
+                move_y_old_flag = 1
+            }
+            
             //  P0タッチ中は、前後の加速度(Y軸)をスクロールに変換
             // if abs(move_y) > 0 :
             move_reng = Math.abs(move_y_old - move_y)
@@ -169,6 +175,8 @@ basic.forever(function on_forever() {
                 move_y = 0
             }
             
+        } else if (p0_now == false) {
+            move_y_old_flag = 0
         }
         
         //  スクロール中はカーソル上下移動を相殺
