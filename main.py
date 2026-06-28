@@ -141,7 +141,7 @@ move_y_old=0
 move_y_old_flag=0
 MODE_MOUSE = 0
 MODE_KEYBOARD = 1
-current_mode = MODE_MOUSE
+current_mode = MODE_KEYBOARD
 acc_x_history = [0, 0, 0, 0]
 acc_y_history = [0, 0, 0, 0]
 #acc_z_history = [-1023, -1023, -1023, -1023]
@@ -150,6 +150,7 @@ acc_y_history = [0, 0, 0, 0]
 serial.redirect_to_usb()
 # 必要に応じて、ここでBluetoothマウスサービスの開始処理を呼び出します
 mouse.start_mouse_service()
+keyboard.start_keyboard_service()
 # --- メインループ ---
 
 def on_forever():

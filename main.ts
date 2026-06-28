@@ -118,7 +118,7 @@ let move_y_old = 0
 let move_y_old_flag = 0
 let MODE_MOUSE = 0
 let MODE_KEYBOARD = 1
-let current_mode = MODE_MOUSE
+let current_mode = MODE_KEYBOARD
 let acc_x_history = [0, 0, 0, 0]
 let acc_y_history = [0, 0, 0, 0]
 // acc_z_history = [-1023, -1023, -1023, -1023]
@@ -127,6 +127,7 @@ let acc_y_history = [0, 0, 0, 0]
 serial.redirectToUSB()
 //  必要に応じて、ここでBluetoothマウスサービスの開始処理を呼び出します
 mouse.startMouseService()
+keyboard.startKeyboardService()
 //  --- メインループ ---
 basic.forever(function on_forever() {
     let scroll_val: number;
