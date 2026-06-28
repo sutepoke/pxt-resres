@@ -180,7 +180,7 @@ def on_forever():
             move_reng= abs(abs(move_y_old)-abs(move_y))
             if move_reng > 0 :
                 #scroll_val = 1 if move_y > 0 else -1
-                if move_reng < 3:
+                if move_reng < 4:
                     scroll_val=0
                 elif move_reng < 9:
                     scroll_val = 1 if move_y > 0 else -1
@@ -189,7 +189,7 @@ def on_forever():
                 elif move_reng < 45:
                     scroll_val = 3 if move_y > 0 else -3
                 else:
-                    scroll_val = 5 if move_y > 0 else -5
+                    scroll_val = 3 if move_y > 0 else -5
 
                 move_y_old = move_y
             move_y = 0

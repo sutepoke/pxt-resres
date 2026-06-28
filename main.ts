@@ -159,7 +159,7 @@ basic.forever(function on_forever() {
             move_reng = Math.abs(Math.abs(move_y_old) - Math.abs(move_y))
             if (move_reng > 0) {
                 // scroll_val = 1 if move_y > 0 else -1
-                if (move_reng < 3) {
+                if (move_reng < 4) {
                     scroll_val = 0
                 } else if (move_reng < 9) {
                     scroll_val = move_y > 0 ? 1 : -1
@@ -168,7 +168,7 @@ basic.forever(function on_forever() {
                 } else if (move_reng < 45) {
                     scroll_val = move_y > 0 ? 3 : -3
                 } else {
-                    scroll_val = move_y > 0 ? 5 : -5
+                    scroll_val = move_y > 0 ? 3 : -5
                 }
                 
                 move_y_old = move_y
