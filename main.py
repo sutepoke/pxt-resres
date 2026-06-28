@@ -138,7 +138,7 @@ logo_now = False
 avg_x_old =0
 avg_y_old =0
 move_y_old=0
-
+move_y_old_flag=0
 MODE_MOUSE = 0
 MODE_KEYBOARD = 1
 current_mode = MODE_MOUSE
@@ -153,7 +153,7 @@ mouse.start_mouse_service()
 # --- メインループ ---
 
 def on_forever():
-    global move_y_old   
+    global move_y_old ,move_y_old_flag   
     move_ax,move_ay = process_acc()
     #横向き（ロゴが右）
     move_x = move_ay*-1
@@ -192,9 +192,12 @@ def on_forever():
                     scroll_val = 5 if move_y > 0 else -5
 
                 move_y_old = move_y
-                move_y = 0
+            move_y = 0
         elif p0_now == False:
             move_y_old_flag = 0
+        
+        serial.write_value("flag", move_y_old_flag)
+        serial.write_value("reng", move_reng)
         # スクロール中はカーソル上下移動を相殺
         # 3. ボタン状態の変化チェック
         # 長押し(hold)に対応するため、状態が変わったとき、またはボタンが押され続けている時に送信
@@ -215,9 +218,9 @@ def on_forever():
     elif current_mode == MODE_KEYBOARD:
         pass
     #(pitch,rool)=prosses_deg(move_x,move_y,move_z)
-    serial.write_value("x     ", move_x)
-    serial.write_value("y     ", move_y)
-    serial.write_value("scroll", scroll_val)
+    #serial.write_value("x     ", move_x)
+    #serial.write_value("y     ", move_y)
+    #serial.write_value("scroll", scroll_val)
     #serial.write_value("y ", raw_y)
 
     basic.pause(20)

@@ -115,6 +115,7 @@ let logo_now = false
 let avg_x_old = 0
 let avg_y_old = 0
 let move_y_old = 0
+let move_y_old_flag = 0
 let MODE_MOUSE = 0
 let MODE_KEYBOARD = 1
 let current_mode = MODE_MOUSE
@@ -129,7 +130,6 @@ mouse.startMouseService()
 //  --- メインループ ---
 basic.forever(function on_forever() {
     let scroll_val: number;
-    let move_y_old_flag: number;
     let move_reng: number;
     let is_changed: any;
     let btn_a_prev2: boolean;
@@ -172,13 +172,15 @@ basic.forever(function on_forever() {
                 }
                 
                 move_y_old = move_y
-                move_y = 0
             }
             
+            move_y = 0
         } else if (p0_now == false) {
             move_y_old_flag = 0
         }
         
+        serial.writeValue("flag", move_y_old_flag)
+        serial.writeValue("reng", move_reng)
         //  スクロール中はカーソル上下移動を相殺
         //  3. ボタン状態の変化チェック
         //  長押し(hold)に対応するため、状態が変わったとき、またはボタンが押され続けている時に送信
@@ -197,9 +199,9 @@ basic.forever(function on_forever() {
     }
     
     // (pitch,rool)=prosses_deg(move_x,move_y,move_z)
-    serial.writeValue("x     ", move_x)
-    serial.writeValue("y     ", move_y)
-    serial.writeValue("scroll", scroll_val)
+    // serial.write_value("x     ", move_x)
+    // serial.write_value("y     ", move_y)
+    // serial.write_value("scroll", scroll_val)
     // serial.write_value("y ", raw_y)
     basic.pause(20)
 })
