@@ -113,7 +113,7 @@ def process_acc():
         # ゆっくり動かした時
     #    move = diff * 0.8 * sign
     # 素早く動かした時
-    return (move_acc_x,move_acc_y)
+    return move_acc_x,move_acc_y
 def update_mode_led():
     
     if current_mode == MODE_MOUSE:
