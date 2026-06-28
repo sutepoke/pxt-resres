@@ -233,7 +233,7 @@ def on_in_background():
         # ボタンとエッジコネクタ(P0)の「タッチされているか」の状態を取得
         btn_a_now = input.button_is_pressed(Button.A)
         btn_b_now = input.button_is_pressed(Button.B)
-        p0_now = input.pin_is_pressed(TouchPin.P0)
+        # p0_now = input.pin_is_pressed(TouchPin.P0)
         logo_now = input.logo_is_pressed()
         # 加速度センサーの値を取得 (-2046 〜 2046)
         # ※表面を正面（ロゴが右、Aボタンが手前）にした場合、
