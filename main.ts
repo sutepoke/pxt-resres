@@ -50,11 +50,11 @@ function process_acc(): number[] {
     } else if (Math.abs(avg_x) < 6) {
         move_acc_x = avg_x
     } else if (Math.abs(avg_x) < 15) {
-        move_acc_x = avg_x * 1.5
-    } else if (Math.abs(avg_x) < 45) {
         move_acc_x = avg_x * 2
+    } else if (Math.abs(avg_x) < 40) {
+        move_acc_x = avg_x * 2.5
     } else {
-        move_acc_x = 90
+        move_acc_x = 100
     }
     
     //     move_acc_x= avg_x
@@ -156,7 +156,7 @@ basic.forever(function on_forever() {
             
             //  P0タッチ中は、前後の加速度(Y軸)をスクロールに変換
             // if abs(move_y) > 0 :
-            move_reng = Math.abs(move_y_old - move_y)
+            move_reng = Math.abs(Math.abs(move_y_old) - Math.abs(move_y))
             if (move_reng > 0) {
                 // scroll_val = 1 if move_y > 0 else -1
                 if (move_reng < 3) {

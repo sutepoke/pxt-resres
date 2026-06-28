@@ -81,11 +81,11 @@ def process_acc():
     elif abs(avg_x)< 6 :
         move_acc_x= avg_x 
     elif abs(avg_x)< 15 :
-        move_acc_x= avg_x * 1.5
-    elif abs(avg_x)< 45 :
         move_acc_x= avg_x * 2
+    elif abs(avg_x)< 40 :
+        move_acc_x= avg_x * 2.5
     else:
-        move_acc_x= 90
+        move_acc_x= 100
     #    move_acc_x= avg_x
     #avg_move_y= avg_y_old-avg_y
     #sign = 1 if avg_y > 0 else -1
@@ -177,7 +177,7 @@ def on_forever():
                 
             # P0タッチ中は、前後の加速度(Y軸)をスクロールに変換
             #if abs(move_y) > 0 :
-            move_reng= abs(move_y_old-move_y)
+            move_reng= abs(abs(move_y_old)-abs(move_y))
             if move_reng > 0 :
                 #scroll_val = 1 if move_y > 0 else -1
                 if move_reng < 3:
